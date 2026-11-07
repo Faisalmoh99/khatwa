@@ -1,0 +1,38 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "devices": {
+      "$dev": {
+        ".read": "auth != null",
+        "status": {
+          ".write": "auth != null",
+          ".validate": "newData.hasChildren(['lastSeen'])"
+        },
+        "live": {
+          ".write": "auth != null",
+          ".validate": "newData.hasChildren(['phase', 'ts'])"
+        },
+        "scans": {
+          ".write": "auth != null && !newData.exists()",
+          ".indexOn": ["ts"],
+          "$scan": {
+            ".write": "auth != null",
+            ".validate": "newData.hasChildren(['L', 'R', 'ts', 'source']) && newData.child('ts').isNumber() && newData.child('ts').val() <= now + 60000 && newData.child('L').hasChildren(['0','1','2','3']) && newData.child('R').hasChildren(['0','1','2','3'])"
+          }
+        },
+        "events": {
+          ".write": "auth != null && !newData.exists()",
+          ".indexOn": ["ts"],
+          "$ev": {
+            ".write": "auth != null",
+            ".validate": "newData.hasChildren(['kind', 'ts'])"
+          }
+        },
+        "calibration": {
+          ".write": "auth != null"
+        }
+      }
+    }
+  }
+}

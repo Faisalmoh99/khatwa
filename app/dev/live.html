@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>فحص البث المباشر</title>
+<style>
+  :root{--bg:#F4F6F3;--ink:#16201E;--mute:#6b7a75;--line:#d5ddd9;--g:#2E9E4F;--y:#D9A400;--o:#E8790A;--r:#D6342C}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.7 system-ui,'Segoe UI',Tahoma,sans-serif}
+  main{max-width:860px;margin:auto;padding:16px;display:grid;gap:14px}
+  h1{margin:0;font-size:22px}.sub{margin:0;color:var(--mute);font-size:13.5px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;gap:8px}
+  .card h2{margin:0;font-size:16px}
+  .pill{display:inline-block;padding:1px 10px;border-radius:20px;font-size:12.5px;background:#e8ecea}
+  .on{background:#dff1eb;color:#1D7A68}.off{background:#fbe3df;color:#C03A25}
+  table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+  th,td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:center;font-size:13.5px}
+  th{font-size:12px;color:var(--mute)}
+  .lv{display:inline-block;width:12px;height:12px;border-radius:50%;vertical-align:middle;margin-inline-end:6px}
+  .green{background:var(--g)}.yellow{background:var(--y)}.orange{background:var(--o)}.none{background:#aab}
+  .hot{color:var(--r);font-weight:700}
+  label{font-size:14px}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>فحص البث المباشر</h1>
+    <p class="sub">صفحة للتأكد إن البيانات توصل من الجهاز (أو المحاكي) لـ Firebase وإن القاعدة تشتغل عليها. نفس الملفات اللي بيستخدمها التطبيق.</p>
+  </header>
+  <section class="card">
+    <h2>الجهاز</h2>
+    <div>الحالة: <span id="st" class="pill">…</span> <span id="stInfo" class="sub"></span></div>
+    <div>المرحلة الآن: <b id="phase">-</b> <span id="liveInfo" class="sub"></span></div>
+    <table><thead><tr><th>النقطة</th><th>يسار</th><th>يمين</th><th>الفرق</th></tr></thead><tbody id="live"></tbody></table>
+  </section>
+  <section class="card">
+    <h2>الأيام بعد تطبيق القاعدة</h2>
+    <label><input type="checkbox" id="demo"> احسب بوضع العرض (demoDay)</label>
+    <table><thead><tr><th>اليوم</th><th>المستوى</th><th>الوصف</th><th>محاولات</th><th>المصدر</th></tr></thead><tbody id="days"></tbody></table>
+  </section>
+</main>
+<script type="module">
+import * as K from '../js/khatwa-firebase.js';
+import { SITES, THRESH, buildDays, evaluate, describe } from '../js/rules.js';
+const $ = id => document.getElementById(id);
+const AR = { idle: 'ينتظر', placing: 'تحقق الوقوف', settling: 'ينتظر الاستقرار', done: 'تم', error: 'مرفوض' };
+let scans = {};
+function drawDays() {
+  const mode = $('demo').checked ? 'demo' : 'real';
+  const rows = evaluate(buildDays(scans, { mode }));
+  $('days').innerHTML = rows.slice().reverse().map(r => `<tr><td>${r.key}</td><td><span class="lv ${r.level}"></span>${{ green: 'أخضر', yellow: 'أصفر', orange: 'برتقالي', none: 'مرفوض' }[r.level]}</td><td>${describe(r)}</td><td>${r.attempts}</td><td>${r.scan.source || '-'}${r.scan.backfill ? ' (قديم)' : ''}</td></tr>`).join('') || '<tr><td colspan="5">ما فيه قراءات بعد</td></tr>';
+}
+$('demo').onchange = drawDays;
+(async () => {
+  if (!K.configured()) { $('st').textContent = 'عبّئ firebase-config.js'; return; }
+  await K.init();
+  K.subscribe({
+    onStatus(s, online) {
+      $('st').textContent = online ? 'متصل' : 'غير متصل'; $('st').className = 'pill ' + (online ? 'on' : 'off');
+      $('stInfo').textContent = s ? `${s.source || ''} ${s.firmware || ''} · آخر نبضة ${s.lastSeen ? new Date(s.lastSeen).toLocaleTimeString('ar-SA') : '-'}` : '';
+    },
+    onLive(l) {
+      if (!l) return;
+      $('phase').textContent = AR[l.phase] || l.phase;
+      $('liveInfo').textContent = `${l.msg || ''} · ضغط ${l.fsrL ?? '-'} / ${l.fsrR ?? '-'} · ${l.elapsedSec ?? 0} ث`;
+      const L = l.L || [], R = l.R || [];
+      $('live').innerHTML = SITES.map((s, i) => { const d = L[i] > -100 && R[i] > -100 && L[i] ? +(R[i] - L[i]).toFixed(2) : null; return `<tr><td>${s.ar}</td><td>${L[i] ? (L[i] <= -100 ? 'عطل' : L[i].toFixed(2)) : '-'}</td><td>${R[i] ? (R[i] <= -100 ? 'عطل' : R[i].toFixed(2)) : '-'}</td><td class="${d !== null && Math.abs(d) > THRESH ? 'hot' : ''}">${d ?? '-'}</td></tr>`; }).join('');
+    },
+    onScans(obj) { scans = obj; drawDays(); },
+  });
+})();
+</script>
+</body>
+</html>

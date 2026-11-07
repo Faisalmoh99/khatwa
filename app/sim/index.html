@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>محاكي سجادة خطوة</title>
+<style>
+  :root{--bg:#F4F6F3;--card:#fff;--ink:#16201E;--mute:#6b7a75;--line:#d5ddd9;--ok:#1D7A68;--warn:#B5750C;--bad:#C03A25;--acc:#0E4B5A}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.7 system-ui,'Segoe UI',Tahoma,sans-serif}
+  main{max-width:820px;margin:auto;padding:16px;display:grid;gap:14px}
+  h1{margin:0;font-size:24px}
+  .sub{margin:0;color:var(--mute);font-size:13.5px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;gap:10px}
+  .card h2{margin:0;font-size:16px}
+  .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  label{font-size:14px}
+  select,input[type=number]{font:inherit;padding:5px 8px;border:1.5px solid var(--line);border-radius:8px;background:#fff}
+  input[type=number]{width:80px}
+  button{font:inherit;border:1.5px solid var(--ink);background:#fff;border-radius:10px;padding:7px 14px;cursor:pointer}
+  button.main{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+  button.danger{border-color:var(--bad);color:var(--bad)}
+  button:disabled{opacity:.45;cursor:default}
+  .pill{display:inline-block;padding:1px 10px;border-radius:20px;font-size:12.5px;background:#e8ecea}
+  .pill.ok{background:#dff1eb;color:var(--ok)}.pill.bad{background:#fbe3df;color:var(--bad)}.pill.warn{background:#fbefd9;color:var(--warn)}
+  table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+  th,td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:center;font-size:14px}
+  th{font-size:12.5px;color:var(--mute);font-weight:600}
+  td.hot{color:var(--bad);font-weight:700}
+  .bar{height:8px;background:#e8ecea;border-radius:8px;overflow:hidden}.bar i{display:block;height:100%;background:var(--acc);width:0;transition:width .3s}
+  #log{background:#0d1211;color:#9fd8c6;font:12px/1.6 ui-monospace,Menlo,Consolas,monospace;padding:10px;border-radius:8px;max-height:220px;overflow:auto;direction:ltr;text-align:left;white-space:pre-wrap;margin:0}
+  .note{font-size:12.5px;color:var(--mute);margin:0}
+  .warnbox{background:#fbefd9;border:1px solid #e7c98f;border-radius:10px;padding:8px 12px;font-size:13.5px}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>محاكي سجادة خطوة</h1>
+    <p class="sub">يرسل قراءات وهمية لـ Firebase بنفس شكل بيانات ESP32 بالضبط، عشان التطبيق يشتغل قبل وصول الجهاز. كل قراءة منه مكتوب عليها <code>source: "sim"</code>.</p>
+  </header>
+
+  <div id="cfgWarn" class="warnbox" hidden>ما فيه إعدادات Firebase. عبّئ <code>app/js/firebase-config.js</code> (الشرح في docs/SETUP.md) وحدّث الصفحة.</div>
+
+  <section class="card">
+    <h2>الاتصال</h2>
+    <div class="row">
+      <span>الحالة: <span id="conn" class="pill">غير متصل</span></span>
+      <label><input type="checkbox" id="hb" checked> الجهاز الافتراضي «شغّال» (نبضة كل 10 ثواني)</label>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>الفحص</h2>
+    <div class="row">
+      <label>الحالة
+        <select id="scn">
+          <option value="normal">طبيعي (فرق صغير)</option>
+          <option value="hot">نقطة ساخنة: رأس المشط الأول، اليمنى +2.6°</option>
+          <option value="hotL">نقطة ساخنة: الكعب، اليسرى +2.8°</option>
+          <option value="edge">حدّي: الإبهام، اليمنى +2.0° (ما ينبّه)</option>
+          <option value="one">يقف على قدم وحدة (يُرفض ولا يُسجّل)</option>
+          <option value="move">يتحرك أثناء القياس (يعيد العدّ)</option>
+          <option value="wet">قدمان مبللتان (قراءة منخفضة وبطيئة)</option>
+          <option value="fault">حساس معطّل: رأس المشط الخامس اليسرى (-127)</option>
+          <option value="allsites">كل النقاط فرقها كبير (خطأ وقوف)</option>
+        </select>
+      </label>
+      <label>السرعة
+        <select id="speed">
+          <option value="fast">سريعة (للتطوير، ~25 ثانية)</option>
+          <option value="real">قريبة من الواقع (~50 ثانية)</option>
+        </select>
+      </label>
+    </div>
+    <div class="row">
+      <label><input type="checkbox" id="demoOn"> وضع العرض: سجّل القراءة كـ «يوم»</label>
+      <input type="number" id="demoDay" min="1" max="60" value="1" aria-label="رقم يوم العرض">
+      <label><input type="checkbox" id="demoAuto" checked> زِد اليوم بعد كل فحص ناجح</label>
+    </div>
+    <div class="row">
+      <button class="main" id="start">ابدأ الوقوف</button>
+      <button id="stop" disabled>انزل من السجادة</button>
+      <span id="phase" class="pill">ينتظر</span>
+    </div>
+    <div class="bar"><i id="prog"></i></div>
+    <table>
+      <thead><tr><th>النقطة</th><th>اليسرى °م</th><th>اليمنى °م</th><th>الفرق (يمين − يسار)</th></tr></thead>
+      <tbody id="tbody"></tbody>
+      <tfoot><tr><th>ضغط الكعب (0–4095)</th><td id="fsrL">-</td><td id="fsrR">-</td><td id="elapsed">-</td></tr></tfoot>
+    </table>
+  </section>
+
+  <section class="card">
+    <h2>أدوات للتطوير</h2>
+    <div class="row">
+      <button id="backfill">ولّد ٧ أيام سابقة (آخرها نقطة ساخنة يومين)</button>
+      <button class="danger" id="wipe">امسح كل القراءات والأحداث</button>
+    </div>
+    <p class="note">الأيام السابقة تُكتب بوقت قديم وعليها <code>backfill: true</code> عشان شاشة السجل يكون فيها بيانات. لا تستخدمها في الفيديو كأنها قراءات حقيقية.</p>
+  </section>
+
+  <section class="card">
+    <h2>السجل</h2>
+    <pre id="log"></pre>
+  </section>
+</main>
+
+<script type="module">
+import * as K from '../js/khatwa-firebase.js';
+import { SITES, N, THRESH } from '../js/rules.js';
+
+const $ = id => document.getElementById(id);
+const FW = 'sim-0.1.0';
+const log = m => { const t = new Date().toLocaleTimeString('en-GB'); $('log').textContent = `[${t}] ${m}\n` + $('log').textContent; };
+const r2 = v => Math.round(v * 100) / 100;
+
+// حرارة الجلد الأساسية لكل نقطة (°م): إبهام، م١، م٥، كعب
+const SKIN = [30.8, 31.2, 30.6, 29.9];
+const SCN = {
+  normal:   { dR: [0.2, -0.3, 0.1, 0.2] },
+  hot:      { dR: [0.1, 2.6, 0.2, 0.0] },
+  hotL:     { dR: [0.1, -0.2, 0.1, -2.8] },
+  edge:     { dR: [2.0, 0.1, -0.1, 0.2] },
+  one:      { dR: [0, 0, 0, 0], oneFoot: true },
+  move:     { dR: [0.2, -0.1, 0.1, 0.1], move: true },
+  wet:      { dR: [0.1, 0.2, -0.1, 0.1], wet: true },
+  fault:    { dR: [0.2, -0.2, 0.1, 0.1], fault: { foot: 'L', i: 2 } },
+  allsites: { dR: [2.9, 3.1, 2.7, 3.0] },
+};
+const FSR_ON = 1800, FSR_MIN = 600;      // نفس العتبات اللي بنستخدمها في ESP32 (تُعدّل بعد التجربة)
+const STABLE_WIN = 5, STABLE_DELTA = 0.1, MAX_SEC = 90, MIN_SEC = 8;
+
+let timer = null, hbTimer = null, sess = null;
+
+function render(L, R, fsrL, fsrR, elapsed) {
+  $('tbody').innerHTML = SITES.map((s, i) => {
+    const d = (L && R && L[i] > -100 && R[i] > -100) ? r2(R[i] - L[i]) : null;
+    const f = v => v == null ? '-' : v <= -100 ? 'عطل' : v.toFixed(2);
+    return `<tr><td>${s.ar}</td><td>${f(L && L[i])}</td><td>${f(R && R[i])}</td><td class="${d !== null && Math.abs(d) > THRESH ? 'hot' : ''}">${d === null ? '-' : (d > 0 ? '+' : '') + d.toFixed(2)}</td></tr>`;
+  }).join('');
+  $('fsrL').textContent = fsrL ?? '-'; $('fsrR').textContent = fsrR ?? '-';
+  $('elapsed').textContent = elapsed != null ? `${elapsed} ث` : '-';
+}
+function setPhase(p, txt, cls = '') { $('phase').textContent = txt; $('phase').className = 'pill ' + cls; }
+
+function startScan() {
+  const scn = SCN[$('scn').value], real = $('speed').value === 'real';
+  const tau = (scn.wet ? 2.2 : 1) * (real ? 14 : 5);
+  const start = scn.wet ? 21.5 : 26.0;    // السجادة تبدأ بحرارة الغرفة، والمبللة أبرد (تبخّر)
+  const target = { L: SKIN.slice(), R: SKIN.map((v, i) => v + scn.dR[i]) };
+  if (scn.wet) { target.L = target.L.map(v => v - 1.2); target.R = target.R.map(v => v - 1.2); }
+  sess = { scn, tau, start, target, t: 0, settle: 0, hist: [], moved: false, scnKey: $('scn').value };
+  $('start').disabled = true; $('stop').disabled = false;
+  log(`بداية فحص: ${$('scn').selectedOptions[0].textContent}`);
+  tick();
+  timer = setInterval(tick, 1000);
+}
+
+function sensor(foot, i) {
+  const s = sess;
+  if (s.scn.fault && s.scn.fault.foot === foot && s.scn.fault.i === i) return -127;
+  const tgt = s.target[foot][i];
+  const v = tgt - (tgt - s.start) * Math.exp(-s.settle / s.tau) + (Math.random() - 0.5) * 0.04;
+  return r2(v);
+}
+
+async function tick() {
+  const s = sess; if (!s) return;
+  s.t++;
+  // ضغط الكعب
+  let fsrL = 2600 + Math.round(Math.random() * 200), fsrR = 2550 + Math.round(Math.random() * 200);
+  if (s.scn.oneFoot) fsrR = 120 + Math.round(Math.random() * 60);
+  if (s.scn.move && s.t >= 9 && s.t <= 10) { fsrL = 400; s.moved = true; }
+
+  if (s.t <= 2) {   // كشف الوجود والتحقق من القدمين
+    render(null, null, fsrL, fsrR, s.t);
+    await K.writeLive({ phase: 'placing', msg: 'تحقق من الوقوف', L: [0, 0, 0, 0], R: [0, 0, 0, 0], fsrL, fsrR, standing: false, progress: 0, elapsedSec: s.t });
+    setPhase('placing', 'يتحقق من الوقوف');
+    return;
+  }
+  if (fsrL < FSR_MIN || fsrR < FSR_MIN) {
+    if (s.scn.oneFoot || s.t > 12 || !s.scn.move) {
+      await K.writeLive({ phase: 'error', msg: 'قدم وحدة أو القدم مو في مكانها', L: [0, 0, 0, 0], R: [0, 0, 0, 0], fsrL, fsrR, standing: false, progress: 0, elapsedSec: s.t });
+      setPhase('error', 'مرفوض: قدم وحدة. ما تسجّلت قراءة', 'bad');
+      log('رفض: حساس ضغط ما انضغط (الجهاز يشغّل الضوء الأحمر). ما فيه scan.');
+      return endScan(false);
+    }
+    s.settle = Math.max(0, s.settle - 4); s.hist = [];      // حركة: يعاد عدّ الاستقرار
+    await K.writeLive({ phase: 'settling', msg: 'اكتُشفت حركة، اثبت', L: [0, 0, 0, 0], R: [0, 0, 0, 0], fsrL, fsrR, standing: true, progress: 0, elapsedSec: s.t });
+    setPhase('settling', 'حركة! يعيد عدّ الثبات', 'warn');
+    log('حركة: يعاد عدّ الاستقرار');
+    return;
+  }
+
+  s.settle++;
+  const L = [], R = [];
+  for (let i = 0; i < N; i++) { L.push(sensor('L', i)); R.push(sensor('R', i)); }
+  s.hist.push(L.concat(R)); if (s.hist.length > STABLE_WIN) s.hist.shift();
+  const okVals = (a) => a.filter(v => v > -100);
+  const stable = s.settle >= MIN_SEC && s.hist.length === STABLE_WIN &&
+    [...Array(2 * N).keys()].every(k => { const col = okVals(s.hist.map(h => h[k])); return !col.length || Math.max(...col) - Math.min(...col) < STABLE_DELTA; });
+  const progress = Math.min(99, Math.round((s.settle / (s.tau * 4)) * 100));
+  render(L, R, fsrL, fsrR, s.t);
+  await K.writeLive({ phase: 'settling', L, R, fsrL, fsrR, standing: true, progress, elapsedSec: s.t });
+  setPhase('settling', `ينتظر الاستقرار… ${s.t} ث`);
+  $('prog').style.width = progress + '%';
+
+  if (stable || s.t >= MAX_SEC) {
+    const diff = L.map((v, i) => (v > -100 && R[i] > -100 ? r2(R[i] - v) : -127));
+    const faults = []; L.forEach((v, i) => v <= -100 && faults.push('L' + i)); R.forEach((v, i) => v <= -100 && faults.push('R' + i));
+    const scan = { L, R, diff, standingOk: true, stable, durationSec: s.t, faults, source: 'sim', firmware: FW, scenario: s.scnKey };
+    if ($('demoOn').checked) scan.demoDay = +$('demoDay').value;
+    await K.pushScan(scan);
+    await K.writeLive({ phase: 'done', msg: stable ? 'تم' : 'انتهى الوقت بدون استقرار', L, R, fsrL, fsrR, standing: true, progress: 100, elapsedSec: s.t });
+    $('prog').style.width = '100%';
+    setPhase('done', stable ? `تم في ${s.t} ث وتسجّلت القراءة` : 'انتهى الوقت بدون استقرار (stable=false)', stable ? 'ok' : 'warn');
+    log(`scan مكتوب: stable=${stable}, ${s.t}s, demoDay=${scan.demoDay ?? '-'}`);
+    if (stable && $('demoOn').checked && $('demoAuto').checked) $('demoDay').value = +$('demoDay').value + 1;
+    endScan(true);
+  }
+}
+
+async function endScan(written) {
+  clearInterval(timer); timer = null; sess = null;
+  $('start').disabled = false; $('stop').disabled = true;
+  setTimeout(async () => { if (!sess) { await K.writeLive({ phase: 'idle', L: [0, 0, 0, 0], R: [0, 0, 0, 0], fsrL: 0, fsrR: 0, standing: false, progress: 0, elapsedSec: 0 }); if (!written) setPhase('idle', 'ينتظر'); } }, 6000);
+}
+
+async function heartbeat() {
+  if (!$('hb').checked) { await K.writeStatus({ online: false, firmware: FW, source: 'sim' }); return; }
+  await K.writeStatus({ online: true, firmware: FW, source: 'sim', rssi: -55 });
+}
+
+async function backfill() {
+  // ٧ أيام: ٥ طبيعية ثم نقطة ساخنة يومين متتاليين (يوم ٦ و٧) — للتطوير فقط
+  const now = K.serverNow(), DAY = 86400000;
+  for (let k = 7; k >= 1; k--) {
+    const hot = k <= 2;
+    const dR = hot ? [0.1, 2.5 + Math.random() * 0.3, 0.1, 0] : [Math.random() * 0.6 - 0.3, Math.random() * 0.6 - 0.3, Math.random() * 0.6 - 0.3, Math.random() * 0.6 - 0.3];
+    const L = SKIN.map(v => r2(v + Math.random() * 0.2)), R = L.map((v, i) => r2(v + dR[i]));
+    const scan = { L, R, diff: L.map((v, i) => r2(R[i] - v)), standingOk: true, stable: true, durationSec: 40 + Math.round(Math.random() * 15), faults: [], source: 'sim', firmware: FW, backfill: true };
+    await K.pushScanAt(scan, now - k * DAY);   // ts صريح (قديم) بدل وقت السيرفر
+  }
+  log('تمت كتابة ٧ أيام سابقة (backfill)');
+}
+
+async function main() {
+  render(null, null);
+  if (!K.configured()) { $('cfgWarn').hidden = false; return; }
+  try {
+    const { uid } = await K.init();
+    $('conn').textContent = 'متصل'; $('conn').className = 'pill ok';
+    log(`دخول مجهول uid=${uid.slice(0, 8)}…`);
+    K.subscribe({});            // عشان فرق ساعة السيرفر
+    await heartbeat(); hbTimer = setInterval(heartbeat, 10000);
+    await K.writeLive({ phase: 'idle', L: [0, 0, 0, 0], R: [0, 0, 0, 0], fsrL: 0, fsrR: 0, standing: false, progress: 0, elapsedSec: 0 });
+  } catch (e) {
+    $('conn').textContent = 'فشل: ' + e.message; $('conn').className = 'pill bad'; log('خطأ: ' + e.message);
+  }
+}
+
+$('start').onclick = startScan;
+$('stop').onclick = async () => { log('نزل من السجادة قبل الانتهاء: ما تسجّلت قراءة'); await K.writeLive({ phase: 'error', msg: 'نزل قبل الانتهاء', L: [0, 0, 0, 0], R: [0, 0, 0, 0], fsrL: 0, fsrR: 0, standing: false, progress: 0, elapsedSec: 0 }); setPhase('error', 'أُلغي', 'warn'); endScan(false); };
+$('hb').onchange = heartbeat;
+$('backfill').onclick = backfill;
+$('wipe').onclick = async () => { if (!confirm('تمسح كل القراءات والأحداث للجهاز khatwa-01؟ ما ينفع ترجعها.')) return; await K.clearScans(); await K.clearEvents(); log('انمسحت القراءات والأحداث'); };
+window.addEventListener('beforeunload', () => { try { K.writeStatus({ online: false }); } catch (e) {} });
+main();
+</script>
+</body>
+</html>

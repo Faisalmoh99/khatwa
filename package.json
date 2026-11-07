@@ -1,0 +1,11 @@
+{
+  "name": "khatwa",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "خطوة: سجادة قياس حرارة القدمين لمرضى السكري (MEDATHON 2026)",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "dev": "npx --yes serve app -l 8080"
+  }
+}
