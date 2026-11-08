@@ -28,12 +28,12 @@ export function ChoiceList<T extends string>({
           value={o.value}
           disabled={o.disabled}
           className={cn(
-            'flex min-h-touch-lg w-full items-center gap-3 rounded border-2 border-line bg-surface px-4 py-2 text-start transition-colors duration-kh',
+            'relative flex min-h-touch-lg w-full min-w-0 items-center gap-3 overflow-hidden rounded border-2 border-line bg-surface px-4 py-2 text-start transition-colors duration-kh',
             'data-[state=checked]:border-brand-700 data-[state=checked]:bg-brand-50 disabled:opacity-50',
           )}
         >
           {o.icon && <span className="text-brand-700 [&_svg]:size-6">{o.icon}</span>}
-          <span className="flex-1">
+          <span className="min-w-0 flex-1">
             <span className="block text-base font-semibold text-ink">{o.label}</span>
             {o.hint && <span className="block text-sm text-mute">{o.hint}</span>}
           </span>

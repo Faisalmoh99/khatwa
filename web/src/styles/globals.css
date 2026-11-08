@@ -19,6 +19,10 @@
     min-height: 100dvh;
     -webkit-tap-highlight-color: transparent;
   }
+  /* Safety net: never allow sideways scrolling on a phone (RTL overflow goes to the left). */
+  #root {
+    overflow-x: clip;
+  }
   :focus-visible {
     outline: 3px solid var(--kh-brand-500);
     outline-offset: 2px;
