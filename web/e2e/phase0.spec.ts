@@ -86,16 +86,27 @@ test('no horizontal scroll at 390px', async ({ page }) => {
   for (const path of ['/', '/settings']) {
     await page.goto(`${path}?source=sim`);
     await page.evaluate(() => document.fonts.ready);
-    const wide = await page.evaluate(() =>
-      [...document.querySelectorAll('body *')]
-        .map((e) => ({ e, r: e.getBoundingClientRect() }))
-        .filter(({ r }) => r.width > 0 && (r.right > 391 || r.left < -1))
+    const wide = await page.evaluate(() => {
+      const out = (e: Element) => {
+        const r = e.getBoundingClientRect();
+        return r.width > 0 && (r.right > 391 || r.left < -1);
+      };
+      const docW = document.documentElement.scrollWidth;
+      const leaves = [...document.querySelectorAll('body *')].filter(
+        (e) => out(e) && ![...e.children].some(out),
+      );
+      const overflowing = [...document.querySelectorAll('body *')]
+        .filter((e) => e.scrollWidth > e.clientWidth + 1 && getComputedStyle(e).overflowX === 'visible')
         .map(
-          ({ e, r }) =>
-            `${e.tagName.toLowerCase()}.${String(e.className).slice(0, 40)} [${Math.round(r.left)}..${Math.round(r.right)}]`,
-        )
-        .slice(0, 8),
-    );
+          (e) =>
+            `overflow ${e.tagName.toLowerCase()}.${String(e.className).slice(0, 50)} sw=${e.scrollWidth} cw=${e.clientWidth}`,
+        );
+      const lines = leaves.map((e) => {
+        const r = e.getBoundingClientRect();
+        return `leaf ${e.tagName.toLowerCase()}.${String(e.className).slice(0, 50)} "${(e.textContent || '').trim().slice(0, 30)}" [${Math.round(r.left)}..${Math.round(r.right)}]`;
+      });
+      return docW > 390 ? [`docW=${docW}`, ...lines.slice(0, 6), ...overflowing.slice(0, 6)] : [];
+    });
     expect(wide, `${path}: elements outside the 390px viewport`).toEqual([]);
   }
 });
