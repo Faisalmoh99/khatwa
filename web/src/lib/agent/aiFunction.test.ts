@@ -111,3 +111,22 @@ describe('/api/ai function', () => {
     expect(m.create).not.toHaveBeenCalled();
   });
 });
+
+describe('summary length', async () => {
+  const { completeSentences } = await import('../../../netlify/functions/ai.mjs' as string);
+  test('a reply cut by max_tokens keeps only complete sentences', () => {
+    expect(completeSentences('الجملة الأولى. الجملة الثانية. والثالثة ما', true)).toBe(
+      'الجملة الأولى. الجملة الثانية.',
+    );
+    expect(completeSentences('جملة كاملة.', false)).toBe('جملة كاملة.');
+    expect(completeSentences('بدون نقطة', true)).toBe('');
+  });
+  test('cut reply via the handler', async () => {
+    m.create.mockResolvedValue({
+      stop_reason: 'max_tokens',
+      content: [{ type: 'text', text: 'أولى. ثانية ناقصة' }],
+    });
+    const r = await call({ task: 'summarize', report, device: 'khatwa-01:cut' });
+    expect(await r.json()).toEqual({ summary: 'أولى.' });
+  });
+});

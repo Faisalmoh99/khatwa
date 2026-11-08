@@ -26,9 +26,20 @@ Return the single best report:
 If several apply, choose the most serious in this order: wound, blister, swelling, fever, new_pain, redness. Do not diagnose.`;
 
 const SUMMARY_SYSTEM = `You write a short summary for a doctor from a foot-temperature monitoring report (IWGDF rule: a difference above 2.2 °C at the same site on the same foot for two consecutive days).
-Write 3 to 5 short sentences in clear Modern Standard Arabic, plain text, no headings, no lists.
-Use only the numbers and facts given. Do not add a diagnosis, treatment, medicine, or advice. Do not invent anything.
-Mention adherence, orange or red episodes with their site, patient reports, and red flags when present.`;
+Write 2 to 4 short sentences, at most 70 words, in clear Modern Standard Arabic, plain text, no headings, no lists.
+Use only the facts given, copy every number exactly, and do not add a diagnosis, treatment, medicine, or advice.
+Fields: periodDays = days in the period; adherencePct = % of days measured or quick-checked; counts = number of days per level (green, yellow, orange, red, none = no measurement, paused);
+episodes = orange/red runs (level, days, why, where); siteFlags = days above the threshold per site for the left (L) and right (R) foot;
+quick = quick checks: total, skin = checks with abnormal skin, pain = checks with new pain, skippedCare = checks where foot care was skipped;
+redflags = danger signs the patient reported; last = the most recent day's level and reasons.`;
+
+/** If the reply hit max_tokens, keep only complete sentences. */
+export function completeSentences(text: string, truncated: boolean): string {
+  const t = text.trim();
+  if (!truncated) return t;
+  const cut = Math.max(t.lastIndexOf('.'), t.lastIndexOf('؟'), t.lastIndexOf('!'));
+  return cut > 0 ? t.slice(0, cut + 1) : '';
+}
 
 const ClassifyOut = z.object({ report: z.enum(AI_CODES) });
 
@@ -138,10 +149,10 @@ export default async function handler(req: Request): Promise<Response> {
       system: SUMMARY_SYSTEM,
       messages: [{ role: 'user', content: JSON.stringify(report.data) }],
     });
-    const summary = r.content
-      .flatMap((b) => (b.type === 'text' ? [b.text] : []))
-      .join('')
-      .trim();
+    const summary = completeSentences(
+      r.content.flatMap((b) => (b.type === 'text' ? [b.text] : [])).join(''),
+      r.stop_reason === 'max_tokens',
+    );
     if (r.stop_reason === 'refusal' || !summary) return json({ fallback: true, reason: 'empty' }, 502, allow);
     return json({ summary: summary.slice(0, 1200) }, 200, allow);
   } catch (e) {

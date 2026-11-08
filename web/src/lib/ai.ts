@@ -5,7 +5,7 @@
  */
 import { AI_CODES, type AiCode, MAX_TEXT } from './agent/aiCodes';
 
-const TIMEOUT_MS = 4_000;
+const TIMEOUT_MS = 6_000; // the function cold start can take ~4 s
 const MIN_GAP_MS = 1_500;
 let inFlight = false;
 let lastCall = 0;
