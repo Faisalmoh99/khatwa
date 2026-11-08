@@ -60,3 +60,17 @@ export function arDate(ts: number): string {
     timeZone: 'Asia/Riyadh',
   }).format(ts);
 }
+
+const SHORT = new Intl.DateTimeFormat('ar-SA-u-nu-latn-ca-gregory', {
+  day: 'numeric',
+  month: 'short',
+  timeZone: 'UTC',
+});
+/** Short day label: "8 نوف" or "يوم 3" in demo mode. */
+export const dayLabel = (key: string) =>
+  key.startsWith('D') ? `يوم ${key.slice(1)}` : SHORT.format(new Date(key + 'T12:00:00Z'));
+/** "+0.3°", "-1.2°", and "0.0°" instead of "-0.0°". */
+export const signed = (v: number) => {
+  const r = Math.round(v * 10) / 10;
+  return r === 0 ? '0.0°' : `${r > 0 ? '+' : ''}${r.toFixed(1)}°`;
+};

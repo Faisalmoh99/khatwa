@@ -22,6 +22,7 @@ test.describe('phase 2: assistant', () => {
     await go(page, '/assistant');
     await expect(page.getByTestId('chat-bot').first()).toContainText('ما قست اليوم');
     await checkLayout(page);
+    await expect(page.getByTestId('chat-send')).toBeInViewport();
     await shot(page, '40-assistant-opener');
     await page.getByTestId('quick-replies').getByRole('button', { name: 'مسافر' }).click();
     await expect(page.getByTestId('chat-bot').last()).toContainText('وضع السفر');

@@ -19,6 +19,11 @@
     min-height: 100dvh;
     -webkit-tap-highlight-color: transparent;
   }
+  /* A one-column grid must never grow to fit unbreakable content (truncated text, long chips):
+     the implicit column would be "auto" = min-content. Grids with explicit columns are untouched. */
+  [class~='grid']:not([class*='grid-cols']) {
+    grid-template-columns: minmax(0, 1fr);
+  }
   /* Safety net: never allow sideways scrolling on a phone (RTL overflow goes to the left). */
   #root {
     overflow-x: clip;

@@ -43,8 +43,27 @@ export async function checkLayout(page: Page) {
         h: Math.round(e.getBoundingClientRect().height),
       }))
       .filter((x) => x.h < 44);
-    return { docW, small, font: parseFloat(getComputedStyle(document.body).fontSize) };
+    // Elements sticking out of the 390px screen, even if clipped by the root (deepest offenders only).
+    const out = (e: Element) => {
+      const b = e.getBoundingClientRect();
+      return b.width > 0 && b.height > 0 && (b.right > 391 || b.left < -1);
+    };
+    const offenders = [...document.querySelectorAll('body *')]
+      .filter((e) => out(e) && ![...e.children].some(out) && !e.closest('[data-scroll-x]'))
+      .map((e) => {
+        const b = e.getBoundingClientRect();
+        return `${e.tagName.toLowerCase()}.${String(e.getAttribute('class') ?? '').slice(0, 60)} "${(e.textContent ?? '').trim().slice(0, 24)}" [${Math.round(b.left)}..${Math.round(b.right)}]`;
+      })
+      .slice(0, 6);
+    return {
+      docW,
+      small,
+      offenders,
+      vw: window.innerWidth,
+      font: parseFloat(getComputedStyle(document.body).fontSize),
+    };
   });
+  expect(r.offenders, `nothing outside the screen (innerWidth ${r.vw})`).toEqual([]);
   expect(r.docW, 'no horizontal scroll').toBeLessThanOrEqual(390);
   expect(r.small, 'touch targets ≥ 44px').toEqual([]);
   expect(r.font).toBeGreaterThanOrEqual(17);

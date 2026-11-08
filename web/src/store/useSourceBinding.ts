@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { createSource, type DataSource } from '@/data';
-import { initialDevice, useDevice } from './device';
+import { liveMessages } from '@/lib/quality';
+import { initialDevice, rememberMsgs, useDevice } from './device';
 import { useSettings } from './settings';
 
 /**
@@ -25,7 +26,9 @@ export function useSourceBinding() {
       offs = [
         s.subscribeConnection((connection) => useDevice.setState({ connection })),
         s.subscribeStatus((status, online) => useDevice.setState({ status, online })),
-        s.subscribeLive((live) => useDevice.setState({ live })),
+        s.subscribeLive((live) =>
+          useDevice.setState((st) => ({ live, liveMsgs: rememberMsgs(st.liveMsgs, liveMessages(live)) })),
+        ),
         s.subscribeScans((scans, rejected) => useDevice.setState({ scans, rejected, loaded: true })),
         s.subscribeEvents((events) => useDevice.setState({ events, eventsLoaded: true })),
         s.subscribePhotos((photos) => useDevice.setState({ photos })),

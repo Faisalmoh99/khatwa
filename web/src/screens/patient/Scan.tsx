@@ -1,5 +1,5 @@
 import { CheckCircle2, Droplets, Footprints, Hand, WifiOff } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FootMap } from '@/components/kh/FootMap';
 import { Notice } from '@/components/kh/Notice';
@@ -10,34 +10,20 @@ import { PATIENT_NAV } from '@/components/layout/navs';
 import { AppShell } from '@/components/layout/AppShell';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useNow } from '@/hooks/useNow';
 import { checkScan, liveMessages, type QualityMsg, scanProblems } from '@/lib/quality';
 import { serverNow, useDevice } from '@/store/device';
 
-/** Keeps a live message on screen for 3 s after it disappears, so a brief warning is readable. */
+/** Live messages plus any seen in the last 3 s (kept by the store), so a brief warning is readable. */
 function useStickyMessages(current: QualityMsg[], phase: string | undefined): QualityMsg[] {
-  const latest = useRef(current);
-  useEffect(() => {
-    latest.current = current;
-  });
-  const [kept, setKept] = useState<Record<string, { m: QualityMsg; until: number }>>({});
-  useEffect(() => {
-    const t = setInterval(() => {
-      const now = Date.now();
-      setKept((k) => {
-        const next: typeof k = {};
-        for (const [c, x] of Object.entries(k)) if (x.until > now) next[c] = x;
-        for (const m of latest.current) next[m.code] = { m, until: now + 3000 };
-        return next;
-      });
-    }, 200);
-    return () => clearInterval(t);
-  }, []);
+  const kept = useDevice((s) => s.liveMsgs);
+  const now = useNow(250);
   if (phase === 'idle' || phase === 'done') return current;
   const shown = new Set(current.map((m) => m.code));
   return [
     ...current,
     ...Object.values(kept)
-      .filter((x) => !shown.has(x.m.code))
+      .filter((x) => x.until > now && !shown.has(x.m.code))
       .map((x) => x.m),
   ];
 }
