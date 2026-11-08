@@ -1,22 +1,13 @@
-import { Suspense, useEffect, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { UpdateBanner } from '@/components/kh/UpdateBanner';
 import { Consent } from '@/screens/intro/Consent';
 import { Login } from '@/screens/intro/Login';
 import { Onboarding } from '@/screens/intro/Onboarding';
 import { RoleSelect } from '@/screens/intro/RoleSelect';
 import { Splash } from '@/screens/intro/Splash';
-import { Audit } from '@/screens/clinic/Audit';
-import { PatientDetail } from '@/screens/clinic/PatientDetail';
-import { Patients } from '@/screens/clinic/Patients';
-import { RuleLab } from '@/screens/clinic/RuleLab';
-import { FamilyHome } from '@/screens/family/FamilyHome';
-import { Assistant } from '@/screens/patient/Assistant';
-import { Booking } from '@/screens/patient/Booking';
-import { Report } from '@/screens/patient/Report';
 import { ComingSoon } from '@/screens/patient/ComingSoon';
 import { Device } from '@/screens/patient/Device';
-import { History } from '@/screens/patient/History';
-import { Photo } from '@/screens/patient/Photo';
 import { Tips } from '@/screens/patient/Tips';
 import { Home } from '@/screens/patient/Home';
 import { More } from '@/screens/patient/More';
@@ -27,6 +18,20 @@ import { Settings } from '@/screens/patient/Settings';
 import { type Role, useSettings } from '@/store/settings';
 import { useEscalationWriter } from '@/store/useEscalationWriter';
 import { useSourceBinding } from '@/store/useSourceBinding';
+
+/** Heavy screens (charts, clinic, report) load on demand; the service worker precaches them for offline use. */
+const Audit = lazy(() => import('@/screens/clinic/Audit').then((m) => ({ default: m.Audit })));
+const PatientDetail = lazy(() =>
+  import('@/screens/clinic/PatientDetail').then((m) => ({ default: m.PatientDetail })),
+);
+const Patients = lazy(() => import('@/screens/clinic/Patients').then((m) => ({ default: m.Patients })));
+const RuleLab = lazy(() => import('@/screens/clinic/RuleLab').then((m) => ({ default: m.RuleLab })));
+const FamilyHome = lazy(() => import('@/screens/family/FamilyHome').then((m) => ({ default: m.FamilyHome })));
+const History = lazy(() => import('@/screens/patient/History').then((m) => ({ default: m.History })));
+const Report = lazy(() => import('@/screens/patient/Report').then((m) => ({ default: m.Report })));
+const Booking = lazy(() => import('@/screens/patient/Booking').then((m) => ({ default: m.Booking })));
+const Assistant = lazy(() => import('@/screens/patient/Assistant').then((m) => ({ default: m.Assistant })));
+const Photo = lazy(() => import('@/screens/patient/Photo').then((m) => ({ default: m.Photo })));
 
 const HOME: Record<Role, string> = { patient: '/home', family: '/family', clinic: '/clinic' };
 
@@ -87,6 +92,7 @@ export function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
+      <UpdateBanner />
       {splash && <Splash />}
       <Suspense fallback={null}>
         <Routes>

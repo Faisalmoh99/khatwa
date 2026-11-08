@@ -31,6 +31,7 @@ export function Home() {
   const demo = useSettings((s) => s.demoMode);
   const lastScan = useDevice((s) => s.scans.at(-1));
   const loaded = useDevice((s) => s.loaded);
+  const offline = useDevice((s) => !!(s.connection.retrying || s.connection.error));
   const streak = streakOf(ladder.views);
   const now = serverNow();
   const reminderTime = useSettings((s) => s.reminderTime);
@@ -77,8 +78,8 @@ export function Home() {
 
       <LevelHero
         level={loaded ? today.level : 'none'}
-        title={loaded ? undefined : 'جارٍ التحميل…'}
-        reason={loaded ? today.reasons[0]?.ar : undefined}
+        title={loaded ? undefined : offline ? 'ما فيه اتصال' : 'جارٍ التحميل…'}
+        reason={loaded ? today.reasons[0]?.ar : offline ? 'أول ما يرجع النت تظهر قراءاتك.' : undefined}
         testId="today-hero"
       >
         {today.done ? (

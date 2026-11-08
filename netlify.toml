@@ -9,6 +9,16 @@
 [build.environment]
   NODE_VERSION = "22"
 
+# The service worker and manifest must always be fresh so updates reach phones.
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Cache-Control = "no-cache"
+
 # Single-page app: unknown paths go to the app. Existing files (sim, story, legacy…) are served first.
 [[redirects]]
   from = "/*"

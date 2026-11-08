@@ -32,6 +32,7 @@ export function SourceBanner() {
 export function ConnectionBanner() {
   const kind = useSettings((s) => s.dataSource);
   const c = useDevice((s) => s.connection);
+  const cached = useDevice((s) => s.fromCache);
   const down = kind === 'firebase' && !(c.connected && c.ready);
   const show = useDelayed(down, 1500);
   if (!show) return null;
@@ -47,7 +48,13 @@ export function ConnectionBanner() {
       ) : (
         <WifiOff className="size-4" aria-hidden />
       )}
-      {starting ? 'جارٍ الاتصال…' : (c.error ?? 'لا يوجد اتصال. نحاول مرة ثانية تلقائيًا…')}
+      {starting
+        ? cached
+          ? 'جارٍ الاتصال… نعرض آخر بيانات محفوظة'
+          : 'جارٍ الاتصال…'
+        : cached
+          ? 'لا يوجد اتصال. نعرض آخر بيانات محفوظة، ونحاول تلقائيًا.'
+          : (c.error ?? 'لا يوجد اتصال. نحاول مرة ثانية تلقائيًا…')}
     </div>
   );
 }

@@ -2,7 +2,7 @@
 // يستخدمها التطبيق والمحاكي وصفحة الفحص. شكل البيانات موثّق في docs/DATA_SCHEMA.md
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getAuth, signInAnonymously, signInWithEmailAndPassword, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { getAuth, initializeAuth, inMemoryPersistence, signInAnonymously, signInWithEmailAndPassword, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import {
   getDatabase, ref, onValue, set, update, push, remove, serverTimestamp,
   query, orderByChild, limitToLast,
@@ -45,7 +45,14 @@ export function init() {
  * كلمة المرور يكتبها المستخدم في الصفحة، وما تنحفظ في الكود.
  */
 export function initDevice(email, password) {
-  try { ensureApp(); } catch (e) { return Promise.reject(e); }
+  if (!configured()) return Promise.reject(new Error('عبّئ app/js/firebase-config.js أول'));
+  // نسخة Firebase مستقلة وجلسة في الذاكرة فقط: ما تتداخل مع دخول التطبيق المجهول في نفس المتصفح،
+  // وما تنحفظ جلسة حساب الجهاز في المتصفح.
+  if (!_app) {
+    _app = initializeApp(firebaseConfig, 'khatwa-device');
+    _auth = initializeAuth(_app, { persistence: inMemoryPersistence });
+    _db = getDatabase(_app);
+  }
   _ready = signInWithEmailAndPassword(_auth, email, password).then(c => ({ uid: c.user.uid }));
   _ready.catch(() => { _ready = null; });
   return _ready;

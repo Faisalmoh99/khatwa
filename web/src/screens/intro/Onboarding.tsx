@@ -108,7 +108,11 @@ export function Onboarding() {
         </div>
       </section>
       <div className="grid gap-5 pt-6">
-        <div className="flex justify-center gap-2" aria-label={`الشاشة ${i + 1} من ${SLIDES.length}`}>
+        <div
+          className="flex justify-center gap-2"
+          role="img"
+          aria-label={`الشاشة ${i + 1} من ${SLIDES.length}`}
+        >
           {SLIDES.map((_, k) => (
             <span
               key={k}

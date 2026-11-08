@@ -64,7 +64,7 @@ export function QuickCheck() {
   return (
     <AppShell title="الفحص السريع" back="/home">
       <p className="text-base text-ink-2">بدل القياس إذا ما قدرت اليوم. ثلاث أسئلة بس.</p>
-      <div className="flex gap-2" aria-label={`السؤال ${step + 1} من ${CHECK_Q.length}`}>
+      <div className="flex gap-2" role="img" aria-label={`السؤال ${step + 1} من ${CHECK_Q.length}`}>
         {CHECK_Q.map((_, i) => (
           <span key={i} className={cn('h-2 flex-1 rounded-full', i <= step ? 'bg-brand-700' : 'bg-line')} />
         ))}

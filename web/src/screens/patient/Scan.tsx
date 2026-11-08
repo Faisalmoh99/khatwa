@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useNow } from '@/hooks/useNow';
 import { checkScan, liveMessages, type QualityMsg, scanProblems } from '@/lib/quality';
-import { serverNow, useDevice } from '@/store/device';
+import { useDevice } from '@/store/device';
 
 /** Live messages plus any seen in the last 3 s (kept by the store), so a brief warning is readable. */
 function useStickyMessages(current: QualityMsg[], phase: string | undefined): QualityMsg[] {
@@ -54,15 +54,18 @@ export function Scan() {
   const live = useDevice((s) => s.live);
   const online = useDevice((s) => s.online);
   const scans = useDevice((s) => s.scans);
+  const arrival = useDevice((s) => s.arrival);
   const nav = useNavigate();
-  const [openedAt] = useState(() => serverNow());
+  // Phone clock only: server time is never compared with it.
+  const [openedAt] = useState(() => Date.now());
   const [dismissed, setDismissed] = useState<string | null>(null);
 
-  /** A scan that finished while this screen is open (server time), and not dismissed by "retry". */
+  /** A scan that arrived from the mat while this screen is open (not dismissed by "retry"). */
   const fresh = useMemo(() => {
-    const last = scans.at(-1);
-    return last && last.ts >= openedAt - 2000 && last.id !== dismissed && !last.backfill ? last : undefined;
-  }, [scans, openedAt, dismissed]);
+    if (!arrival || arrival.at < openedAt || arrival.id === dismissed) return undefined;
+    const s = scans.find((x) => x.id === arrival.id);
+    return s && !s.backfill ? s : undefined;
+  }, [arrival, scans, openedAt, dismissed]);
   const problems = useMemo(() => (fresh ? scanProblems(checkScan(fresh)) : []), [fresh]);
   const ok = fresh && problems.length === 0;
 

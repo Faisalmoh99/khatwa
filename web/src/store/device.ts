@@ -16,6 +16,13 @@ export interface DeviceState {
   photos: Photo[];
   /** Live quality messages seen in the last 3 s, so a brief warning stays readable. */
   liveMsgs: Record<string, { m: QualityMsg; until: number }>;
+  /**
+   * The newest scan that ARRIVED as an addition (not part of the first snapshot), with the phone-clock
+   * time it arrived. The scan screen uses it; server time is never compared with the phone clock.
+   */
+  arrival: { id: string; at: number } | null;
+  /** Showing the snapshot saved on the phone (no live data yet). */
+  fromCache: boolean;
   /** True once the first events snapshot arrived (escalation writer waits for it). */
   eventsLoaded: boolean;
   /** True once the first scans snapshot arrived (avoids flashing "no data"). */
@@ -32,6 +39,8 @@ export const initialDevice: Omit<DeviceState, 'source'> = {
   events: [],
   photos: [],
   liveMsgs: {},
+  arrival: null,
+  fromCache: false,
   eventsLoaded: false,
   loaded: false,
 };
@@ -75,4 +84,14 @@ export function rememberMsgs(
   for (const [k, v] of Object.entries(prev)) if (v.until > now) next[k] = v;
   for (const m of current) next[m.code] = { m, until: now + 3000 };
   return next;
+}
+
+const MEASURING = new Set(['placing', 'settling']);
+export const isMeasuring = (live: Live | null | undefined) => !!live && MEASURING.has(live.phase);
+
+/** The newest scan in `scans` whose id was not in the previous emission (null if none). */
+export function newestArrival(prevIds: Set<string> | null, scans: Scan[]): string | null {
+  if (!prevIds) return null; // first emission = existing history, not an arrival
+  for (let i = scans.length - 1; i >= 0; i--) if (!prevIds.has(scans[i]!.id)) return scans[i]!.id;
+  return null;
 }

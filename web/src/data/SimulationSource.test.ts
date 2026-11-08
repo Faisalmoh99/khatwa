@@ -127,3 +127,18 @@ describe('SimulationSource history and events', () => {
     expect(online).toBe(false);
   });
 });
+
+describe('scan arrival (phone clock only)', async () => {
+  const { newestArrival } = await import('@/store/device');
+  const sc = (id: string) => ({ id }) as Scan;
+  test('the first emission is history, not an arrival', () => {
+    expect(newestArrival(null, [sc('a'), sc('b')])).toBeNull();
+  });
+  test('a new id in a later emission is an arrival', () => {
+    expect(newestArrival(new Set(['a', 'b']), [sc('a'), sc('b'), sc('c')])).toBe('c');
+    expect(newestArrival(new Set(['a', 'b']), [sc('a'), sc('b')])).toBeNull();
+  });
+  test('when the oldest scan drops out of the 300-scan window, only the new one counts', () => {
+    expect(newestArrival(new Set(['a', 'b']), [sc('b'), sc('c')])).toBe('c');
+  });
+});
