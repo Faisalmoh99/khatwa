@@ -14,6 +14,8 @@ import {
   type QuickReplyId,
   reply,
 } from '@/lib/agent/templates';
+import { classifyText, installId } from '@/lib/ai';
+import { combine, needsAi } from '@/lib/agent/combine';
 import { focusSite } from '@/lib/level';
 import { SITES } from '@/lib/rules/rules';
 import { useChat } from '@/store/chat';
@@ -57,6 +59,8 @@ export function Assistant() {
   const day = useChat((s) => s.days[ctx.dayKey]);
   const setDay = useChat((s) => s.setDay);
   const [text, setText] = useState('');
+  const [typing, setTyping] = useState(false);
+  const deviceId = useSettings((s) => s.deviceId);
   const listRef = useRef<HTMLOListElement>(null);
   const stateKey = [ctx.level, ctx.thermal, ctx.mode, ctx.missed, ctx.quickDone].join('|');
   const lastSpoken = useRef('');
@@ -79,11 +83,22 @@ export function Assistant() {
   }, [msgs.length, voice, lastBot]);
   useEffect(() => () => stopSpeaking(), []);
 
-  const send = (input: { id?: QuickReplyId; text?: string }) => {
+  const send = async (input: { id?: QuickReplyId; text?: string }) => {
     const userText = input.text ?? (input.id ? QR[input.id] : '');
-    if (!userText.trim()) return;
-    const r = reply(input, ctx);
-    const next: ChatMsg[] = [...msgs, { who: 'user', text: userText }, ...r.msgs];
+    if (!userText.trim() || typing) return;
+    const withUser: ChatMsg[] = [...msgs, { who: 'user', text: userText }];
+    let extra: { why: string }[] = [];
+    let confirm: string | null = null;
+    // Free text only (never buttons), and only when the templates found no clear red flag.
+    if (input.text && needsAi(input.text)) {
+      setDay(ctx.dayKey, { msgs: withUser, touched: true, stateKey });
+      setTyping(true);
+      const ai = await classifyText(input.text, `${deviceId}:${installId()}`);
+      setTyping(false);
+      ({ extraFlags: extra, confirmInQuickCheck: confirm } = combine(input.text, ai));
+    }
+    const r = reply(input, ctx, extra, confirm);
+    const next: ChatMsg[] = [...withUser, ...r.msgs];
     setDay(ctx.dayKey, { msgs: next, touched: true, stateKey });
     for (const e of r.effects) {
       if (e.type === 'event') void writeEvent(e.event).catch(() => {});
@@ -92,7 +107,7 @@ export function Assistant() {
     }
   };
 
-  const mic = useSpeechInput((t) => send({ text: t }));
+  const mic = useSpeechInput((t) => void send({ text: t }));
 
   return (
     <AppShell
@@ -141,6 +156,14 @@ export function Assistant() {
             </li>
           ),
         )}
+        {typing && (
+          <li className="flex items-end gap-2" aria-label="المساعد يكتب" data-testid="chat-typing">
+            <img src="/logo.png" alt="" width={32} height={32} className="mb-1 shrink-0 rounded-full" />
+            <p className="animate-soft-pulse rounded-lg rounded-es-sm border border-line bg-surface px-4 py-3 text-lg text-mute">
+              …
+            </p>
+          </li>
+        )}
       </ol>
 
       <div className="fixed inset-x-0 bottom-[calc(60px+env(safe-area-inset-bottom))] z-20 border-t border-line bg-bg/95 backdrop-blur">
@@ -151,7 +174,7 @@ export function Assistant() {
                 <button
                   key={id}
                   type="button"
-                  onClick={() => send({ id })}
+                  onClick={() => void send({ id })}
                   className={cn(
                     'min-h-touch shrink-0 rounded-full border-2 px-4 text-base font-semibold',
                     id === 'wound'
@@ -168,7 +191,7 @@ export function Assistant() {
             className="flex items-center gap-2"
             onSubmit={(e) => {
               e.preventDefault();
-              send({ text });
+              void send({ text });
               setText('');
             }}
           >
@@ -199,7 +222,7 @@ export function Assistant() {
             />
             <button
               type="submit"
-              disabled={!text.trim()}
+              disabled={!text.trim() || typing}
               aria-label="أرسل"
               className="grid size-12 shrink-0 place-items-center rounded-full bg-brand-700 text-white disabled:opacity-40"
               data-testid="chat-send"

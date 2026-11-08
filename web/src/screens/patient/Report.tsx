@@ -1,4 +1,4 @@
-import { Printer } from 'lucide-react';
+import { Printer, Sparkles } from 'lucide-react';
 import QRCode from 'qrcode';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
@@ -8,7 +8,8 @@ import { StatusBadge } from '@/components/kh/StatusBadge';
 import { AppShell } from '@/components/layout/AppShell';
 import { Button } from '@/components/ui/button';
 import { arDate, dayLabel, dayWord } from '@/lib/format';
-import { buildReport } from '@/lib/report';
+import { installId, summarize } from '@/lib/ai';
+import { buildReport, summaryPayload, templateSummary } from '@/lib/report';
 import { THRESH } from '@/lib/rules/rules';
 import { serverNow } from '@/store/device';
 import { REAL_ID, usePatient } from '@/store/patients';
@@ -45,6 +46,8 @@ export function Report() {
   const deviceId = useSettings((s) => s.deviceId);
   const r = useMemo(() => (p ? buildReport(p) : null), [p]);
   const [qr, setQr] = useState('');
+  const [summary, setSummary] = useState<string | null>(null);
+  const [summarizing, setSummarizing] = useState(false);
   const url = typeof location !== 'undefined' ? `${location.origin}${location.pathname}` : '';
 
   useEffect(() => {
@@ -54,6 +57,12 @@ export function Report() {
   }, [url]);
 
   if (!p || !r) return <Navigate to="/" replace />;
+  const askSummary = async () => {
+    setSummarizing(true);
+    const s = await summarize(summaryPayload(r), `${deviceId}:${installId()}`);
+    setSummary(s ?? templateSummary(r)); // silent fallback to the templates
+    setSummarizing(false);
+  };
   const back = id ? `/clinic/patient/${id}` : '/more';
   const m = LEVEL[r.last.level];
 
@@ -129,6 +138,29 @@ export function Report() {
             <p className="mt-1 text-base text-ink">{r.last.reasons.join('، ')}</p>
           )}
         </section>
+
+        <Section title="ملخص للطبيب" testId="report-summary">
+          {summary ? (
+            <>
+              <p className="text-base leading-relaxed text-ink" data-testid="report-summary-text">
+                {summary}
+              </p>
+              <p className="mt-2 rounded-sm bg-lv-yellow-soft px-2 py-1 text-sm font-semibold text-lv-yellow-ink">
+                ملخص آلي، راجع الأرقام
+              </p>
+            </>
+          ) : (
+            <Button
+              variant="secondary"
+              onClick={() => void askSummary()}
+              disabled={summarizing}
+              className="print:hidden"
+              data-testid="report-summary-btn"
+            >
+              <Sparkles /> {summarizing ? 'نجهّز الملخص…' : 'ملخص للطبيب'}
+            </Button>
+          )}
+        </Section>
 
         <Section title="ملخص الفترة" testId="report-stats">
           <div className="grid grid-cols-3 gap-2">

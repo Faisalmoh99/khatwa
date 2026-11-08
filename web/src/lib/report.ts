@@ -1,5 +1,6 @@
 /** Visit report data: everything comes from real scans and events of the period. Pure. */
 import type { KhEvent, Photo } from '@/data/types';
+import { dayWord } from './format';
 import { type FinalLevel, focusSite } from './level';
 import type { PatientModel } from './patients';
 import { SITES } from './rules/rules';
@@ -118,4 +119,46 @@ export function buildReport(p: PatientModel, periodDays = 30): ReportData {
     photos: { base: photosBase, today: photosToday },
     last: { level: today?.level ?? 'none', reasons: today?.reasons.map((r) => r.ar) ?? [] },
   };
+}
+
+/** Number-only payload for the AI doctor summary (no name, no photos, no device id). */
+export function summaryPayload(r: ReportData) {
+  const plain = (s: string) => s.replace(/[⁦-⁩]/g, '');
+  return {
+    periodDays: r.periodDays,
+    adherencePct: r.adherencePct,
+    counts: r.counts,
+    episodes: r.episodes.slice(0, 20).map((e) => ({
+      level: e.level,
+      days: e.days,
+      why: plain(e.why).slice(0, 300),
+      where: e.where.slice(0, 80),
+    })),
+    siteFlags: r.siteFlags,
+    quick: r.quick,
+    redflags: r.redflags.slice(0, 20).map((f) => f.why.slice(0, 120)),
+    last: { level: r.last.level, reasons: r.last.reasons.slice(0, 5).map((x) => plain(x).slice(0, 300)) },
+  };
+}
+
+/** Fallback summary from fixed templates (used silently when the AI is unavailable). */
+export function templateSummary(r: ReportData): string {
+  const parts: string[] = [];
+  parts.push(
+    `خلال ${dayWord(r.periodDays)} بلغ الالتزام ${r.adherencePct}% (${r.measured} من ${r.periodDays}).`,
+  );
+  if (r.episodes.length) {
+    const e = r.episodes.at(-1)!;
+    parts.push(
+      `سُجّلت ${r.episodes.length} نوبة برتقالية أو حمراء، آخرها ${dayWord(e.days)} عند ${e.where}.`,
+    );
+  } else parts.push('لم تُسجَّل نوبات برتقالية أو حمراء.');
+  const hot = r.siteFlags.filter((s) => s.L + s.R > 0).map((s) => `${s.site} (${dayWord(s.L + s.R)})`);
+  if (hot.length) parts.push(`أيام فوق الحد: ${hot.join('، ')}.`);
+  if (r.quick.total)
+    parts.push(
+      `أجرى المريض ${r.quick.total} فحصًا سريعًا، منها ${r.quick.skin} بجلد غير عادي و${r.quick.pain} بألم جديد.`,
+    );
+  if (r.redflags.length) parts.push(`أبلغ المريض عن ${r.redflags.length} علامة خطر.`);
+  return parts.join(' ');
 }

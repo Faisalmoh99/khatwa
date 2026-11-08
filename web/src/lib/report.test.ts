@@ -54,3 +54,19 @@ test('virtual roster: labelled virtual, real patient always first', () => {
     'علامة خطر من المريض',
   );
 });
+
+test('summary payload has numbers and reasons only, and the template fallback reads correctly', async () => {
+  const { summaryPayload, templateSummary } = await import('./report');
+  const scans = [scan(0), scan(1, 2.5), scan(2, 2.6)];
+  const p = buildPatient(
+    { id: 'real', name: 'أبو سعد', age: null, virtual: false, scans, events: [] },
+    T0 + 2 * DAY + 1000,
+  );
+  const r = buildReport(p);
+  const payload = JSON.stringify(summaryPayload(r));
+  expect(payload).not.toContain('أبو سعد');
+  expect(payload).not.toMatch(/[⁦-⁩]/);
+  const t = templateSummary(r);
+  expect(t).toContain('3 أيام');
+  expect(t).toContain('الالتزام 100%');
+});

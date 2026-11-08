@@ -214,6 +214,8 @@ export function reply(
   input: { id?: QuickReplyId; text?: string },
   c: ChatContext,
   extraFlags: { why: string }[] = [],
+  /** The classifier heard redness / new pain: ask for confirmation in the quick check (never decide). */
+  confirm: string | null = null,
 ): { msgs: BotMsg[]; effects: Effect[] } {
   const msgs: BotMsg[] = [];
   const effects: Effect[] = [];
@@ -237,6 +239,16 @@ export function reply(
       return { msgs, effects };
     }
     id = intent(text);
+    if (!id && confirm) {
+      msgs.push(
+        bot(
+          `فهمت إنك تحس بـ${confirm}. عشان ينسجل صح، جاوب على الفحص السريع (ثلاث أسئلة). وإذا فيه جرح أو سائل اضغط «عندي جرح أو سائل».`,
+          ['check', 'wound'],
+        ),
+      );
+      ev({ kind: 'message', data: { text: text.slice(0, 200), heard: confirm } });
+      return { msgs, effects };
+    }
     if (!id) {
       msgs.push(
         bot(
