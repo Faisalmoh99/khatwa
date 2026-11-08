@@ -121,3 +121,16 @@ export function parseCollection<T extends z.ZodTypeAny>(
 
 /** The device counts as online if its last heartbeat (server time) is younger than this. */
 export const ONLINE_WINDOW_MS = 60_000;
+
+/** Online = heartbeat not marked offline and younger than 60 s on the SERVER clock (phone clock may be wrong). */
+export function isOnline(
+  status: Pick<DeviceStatus, 'online' | 'lastSeen'> | null | undefined,
+  serverNow: number,
+): boolean {
+  return !!(
+    status &&
+    status.online !== false &&
+    status.lastSeen &&
+    serverNow - status.lastSeen < ONLINE_WINDOW_MS
+  );
+}

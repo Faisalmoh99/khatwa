@@ -35,8 +35,9 @@ export function SwitchRow({
       >
         <SwitchPrimitive.Thumb
           className={cn(
-            'block size-6 translate-x-[-4px] rounded-full bg-white shadow transition-transform duration-kh ease-kh',
-            'data-[state=checked]:translate-x-[-28px]',
+            // RTL: off = thumb on the right (start), on = thumb slides to the left (end).
+            'absolute right-1 top-1 block size-6 rounded-full bg-white shadow transition-transform duration-kh ease-kh',
+            'data-[state=checked]:-translate-x-6',
           )}
         />
       </SwitchPrimitive.Root>

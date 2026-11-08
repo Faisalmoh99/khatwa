@@ -29,6 +29,12 @@ export interface SettingsState {
   role: Role | null;
   onboarded: boolean;
   consents: Consents;
+  /** Demo login (phone + OTP 1234). Not real authentication. */
+  session: { phone: string } | null;
+  /** How the patient is called in family messages (optional). */
+  patientName: string;
+  /** For the family role: the patient's phone, used by the call and WhatsApp buttons. */
+  patientPhone: string;
   familyName: string;
   familyPhone: string;
   /** HH:MM, Riyadh time. */
@@ -60,6 +66,9 @@ export const useSettings = create<SettingsState>()(
       role: null,
       onboarded: false,
       consents: { core: false, photos: false, family: false },
+      session: null,
+      patientName: '',
+      patientPhone: '',
       familyName: '',
       familyPhone: '',
       reminderTime: '20:00',
@@ -86,5 +95,15 @@ export function applyUrlOverrides(search = typeof location !== 'undefined' ? loc
   const dev = q.get('dev');
   if (dev && /^[a-z0-9-]{3,40}$/i.test(dev)) patch.deviceId = dev;
   if (q.get('demo') === '1') Object.assign(patch, { demoMode: true, demoSince: 0 });
+  // ?as=patient|family|clinic skips onboarding for demo links and e2e tests.
+  const as = q.get('as');
+  if (as === 'patient' || as === 'family' || as === 'clinic') {
+    Object.assign(patch, {
+      role: as,
+      onboarded: true,
+      session: { phone: '0500000000' },
+      consents: { core: true, photos: true, family: true, acceptedAt: Date.now() },
+    });
+  }
   if (Object.keys(patch).length) useSettings.getState().set(patch);
 }

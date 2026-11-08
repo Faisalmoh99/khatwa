@@ -101,6 +101,7 @@ export function FootMap({
           })}
         </g>
         {showValues &&
+          vals?.some((v) => v !== 0) &&
           SITE_XY.map(([x, y], i) => {
             const sx = side === 'R' ? 146 + x : 114 - x;
             return (
@@ -109,7 +110,7 @@ export function FootMap({
                 x={sx}
                 y={y + 8 + 22}
                 textAnchor="middle"
-                fontSize="13"
+                fontSize="14"
                 fontWeight="600"
                 fill={hot(side, i) ? 'var(--kh-orange-ink)' : 'var(--kh-ink-2)'}
                 direction="ltr"
@@ -137,7 +138,7 @@ export function FootMap({
   return (
     <svg
       viewBox="0 0 260 276"
-      className={cn('mx-auto w-full', compact ? 'max-w-[220px]' : 'max-w-[320px]', className)}
+      className={cn('mx-auto w-full', compact ? 'max-w-[260px]' : 'max-w-[320px]', className)}
       role="img"
       aria-label={`خريطة القدمين. ${desc}`}
     >

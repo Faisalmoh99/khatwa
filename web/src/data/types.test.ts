@@ -75,3 +75,15 @@ describe('parseCollection', () => {
     expect(parseCollection(ScanSchema, null)).toEqual({ items: [], rejected: [] });
   });
 });
+
+describe('isOnline (server clock)', async () => {
+  const { isOnline } = await import('./types');
+  test('heartbeat 59 s old = online, 60 s = offline', () => {
+    expect(isOnline({ online: true, lastSeen: 1_000_000 }, 1_059_000)).toBe(true);
+    expect(isOnline({ online: true, lastSeen: 1_000_000 }, 1_060_000)).toBe(false);
+  });
+  test('explicit online:false = offline; no status = offline', () => {
+    expect(isOnline({ online: false, lastSeen: 1_000_000 }, 1_000_001)).toBe(false);
+    expect(isOnline(null, 1)).toBe(false);
+  });
+});

@@ -30,7 +30,7 @@ import {
   type Live,
   LiveSchema,
   type NewEvent,
-  ONLINE_WINDOW_MS,
+  isOnline,
   parseCollection,
   type Scan,
   ScanSchema,
@@ -47,6 +47,8 @@ export class FirebaseSource implements DataSource {
   private offs: Unsubscribe[] = [];
   private serverOffset = 0;
   private stopped = false;
+  /** Resolves once signed in. Writes wait for it (a write before sign-in is rejected by the rules). */
+  private ready!: Promise<void>;
   private retryTimer: ReturnType<typeof setTimeout> | null = null;
   private lastStatus: DeviceStatus | null = null;
 
@@ -84,7 +86,8 @@ export class FirebaseSource implements DataSource {
         this.serverOffset = Number(s.val()) || 0;
       }),
     );
-    await this.signInWithRetry(0);
+    this.ready = this.signInWithRetry(0);
+    await this.ready;
   }
 
   private signInWithRetry(attempt: number): Promise<void> {
@@ -122,12 +125,7 @@ export class FirebaseSource implements DataSource {
   private subscribeData() {
     const emitStatus = () => {
       const s = this.lastStatus;
-      const online = !!(
-        s &&
-        s.online !== false &&
-        s.lastSeen &&
-        this.serverNow() - s.lastSeen < ONLINE_WINDOW_MS
-      );
+      const online = isOnline(s, this.serverNow());
       this.status.emit({ status: s, online });
     };
     this.offs.push(
@@ -179,6 +177,7 @@ export class FirebaseSource implements DataSource {
   }
 
   async writeEvent(e: NewEvent) {
+    await this.ready;
     await push(ref(this.db, this.path('events')), { ...stripUndefined(e), ts: serverTimestamp() });
   }
 }

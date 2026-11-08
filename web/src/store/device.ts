@@ -31,9 +31,23 @@ export const useDevice = create<DeviceState>()(() => ({ source: null, ...initial
 
 /** Writes an event through whichever source is active. */
 export async function writeEvent(e: NewEvent) {
-  const src = useDevice.getState().source;
-  if (!src) throw new Error('no data source');
-  await src.writeEvent(e);
+  await (await activeSource()).writeEvent(e);
+}
+
+/** The active source, waiting briefly if it is still being created (first seconds after load). */
+export function activeSource(timeoutMs = 10_000): Promise<DataSource> {
+  const now = useDevice.getState().source;
+  if (now) return Promise.resolve(now);
+  return new Promise((resolve, reject) => {
+    const t = setTimeout(() => (off(), reject(new Error('no data source'))), timeoutMs);
+    const off = useDevice.subscribe((s) => {
+      if (s.source) {
+        clearTimeout(t);
+        off();
+        resolve(s.source);
+      }
+    });
+  });
 }
 
 export const serverNow = () => useDevice.getState().source?.serverNow() ?? Date.now();
