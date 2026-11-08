@@ -25,7 +25,9 @@ test('AI hears swelling the templates missed → red path (the more serious wins
   expect(calls).toHaveLength(1);
 });
 
-test('AI hears redness → the patient is asked to confirm in the quick check (AI does not set the level)', async ({ page }) => {
+test('AI hears redness → the patient is asked to confirm in the quick check (AI does not set the level)', async ({
+  page,
+}) => {
   await mockAi(page, () => ({ report: 'redness' }));
   await go(page, '/assistant');
   await page.getByTestId('chat-input').fill('أصابعي محمرة شوي');
@@ -54,7 +56,9 @@ test('function down → quiet fallback to the templates', async ({ page }) => {
 });
 
 test('doctor summary: only on request, labelled, cached for the same report', async ({ page }) => {
-  const calls = await mockAi(page, (b) => (b.task === 'summarize' ? { summary: 'خلال 30 يومًا بلغ الالتزام 100%.' } : null));
+  const calls = await mockAi(page, (b) =>
+    b.task === 'summarize' ? { summary: 'خلال 30 يومًا بلغ الالتزام 100%.' } : null,
+  );
   await go(page, '/report');
   await page.waitForTimeout(500);
   expect(calls).toHaveLength(0);
