@@ -5,7 +5,14 @@ import { Login } from '@/screens/intro/Login';
 import { Onboarding } from '@/screens/intro/Onboarding';
 import { RoleSelect } from '@/screens/intro/RoleSelect';
 import { Splash } from '@/screens/intro/Splash';
+import { Audit } from '@/screens/clinic/Audit';
+import { PatientDetail } from '@/screens/clinic/PatientDetail';
+import { Patients } from '@/screens/clinic/Patients';
+import { RuleLab } from '@/screens/clinic/RuleLab';
+import { FamilyHome } from '@/screens/family/FamilyHome';
 import { Assistant } from '@/screens/patient/Assistant';
+import { Booking } from '@/screens/patient/Booking';
+import { Report } from '@/screens/patient/Report';
 import { ComingSoon } from '@/screens/patient/ComingSoon';
 import { Device } from '@/screens/patient/Device';
 import { History } from '@/screens/patient/History';
@@ -20,7 +27,6 @@ import { Settings } from '@/screens/patient/Settings';
 import { type Role, useSettings } from '@/store/settings';
 import { useEscalationWriter } from '@/store/useEscalationWriter';
 import { useSourceBinding } from '@/store/useSourceBinding';
-import { RolePlaceholder } from '@/screens/RolePlaceholder';
 
 const HOME: Record<Role, string> = { patient: '/home', family: '/family', clinic: '/clinic' };
 
@@ -75,6 +81,7 @@ export function App() {
   useEscalationWriter();
   const splash = useSplash();
   const P = (el: ReactNode) => <RequireRole role="patient">{el}</RequireRole>;
+  const C = (el: ReactNode) => <RequireRole role="clinic">{el}</RequireRole>;
   const ANY = (el: ReactNode) => <RequireRole role={['patient', 'family', 'clinic']}>{el}</RequireRole>;
 
   return (
@@ -102,14 +109,15 @@ export function App() {
           <Route path="/device" element={ANY(<Device />)} />
           <Route path="/settings" element={ANY(<Settings />)} />
 
-          <Route
-            path="/family"
-            element={<RequireRole role="family">{<RolePlaceholder role="family" />}</RequireRole>}
-          />
-          <Route
-            path="/clinic/*"
-            element={<RequireRole role="clinic">{<RolePlaceholder role="clinic" />}</RequireRole>}
-          />
+          <Route path="/report" element={ANY(<Report />)} />
+          <Route path="/booking" element={P(<Booking />)} />
+
+          <Route path="/family" element={<RequireRole role="family">{<FamilyHome />}</RequireRole>} />
+          <Route path="/clinic" element={C(<Patients />)} />
+          <Route path="/clinic/patient/:id" element={C(<PatientDetail />)} />
+          <Route path="/clinic/patient/:id/report" element={C(<Report />)} />
+          <Route path="/clinic/audit" element={C(<Audit />)} />
+          <Route path="/clinic/lab" element={C(<RuleLab />)} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

@@ -18,7 +18,7 @@ export function TopBar({
 }) {
   const nav = useNavigate();
   return (
-    <header className="sticky top-0 z-20 border-b border-line bg-surface/95 backdrop-blur">
+    <header className="sticky top-0 z-20 border-b border-line bg-surface/95 backdrop-blur print:hidden">
       <div className="mx-auto flex h-16 max-w-screen-sm items-center gap-2 px-3">
         {back ? (
           <button
@@ -70,8 +70,10 @@ export function AppShell({
 }) {
   return (
     <div className="min-h-dvh">
-      <SourceBanner />
-      <ConnectionBanner />
+      <div className="print:hidden">
+        <SourceBanner />
+        <ConnectionBanner />
+      </div>
       <TopBar title={title} back={back} end={end} settings={settings} />
       <main
         className={cn(

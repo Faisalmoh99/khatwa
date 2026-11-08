@@ -71,3 +71,10 @@ test('ladder text uses correct Arabic', () => {
     ladderText({ step: 4, missed: 3, paused: false, mode: 'normal', fresh: false, todayDone: false }),
   ).toContain('3 أيام');
 });
+
+test('family and clinic get third-person ladder text', () => {
+  const base = { paused: false, mode: 'normal' as const, fresh: false, todayDone: false };
+  expect(ladderText({ ...base, step: 3, missed: 2 }, 'other')).toBe('يومين بدون قياس.');
+  expect(ladderText({ ...base, step: 1, missed: 0, fresh: true }, 'other')).toBe('ما بدأ القياس بعد.');
+  expect(ladderText({ ...base, step: 4, missed: 3 }, 'other')).toContain('أُبلغت العيادة');
+});

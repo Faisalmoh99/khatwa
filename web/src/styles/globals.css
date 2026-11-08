@@ -39,3 +39,19 @@
     font-variant-numeric: tabular-nums;
   }
 }
+
+/* Visit report printing: A4, white, no app chrome. */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+  html,
+  body {
+    background: #fff !important;
+    font-size: 12pt;
+  }
+  #root {
+    overflow: visible;
+  }
+}

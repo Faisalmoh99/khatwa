@@ -129,7 +129,14 @@ export function Settings() {
       )}
 
       {s.role === 'family' && (
-        <Section id="patient" title="رقم المريض" hint="لزر الاتصال وواتساب في واجهة العائلة.">
+        <Section id="patient" title="المريض اللي تتابعه" hint="لزر الاتصال وواتساب في واجهة العائلة.">
+          <input
+            className={input}
+            value={s.patientName}
+            onChange={(e) => s.set({ patientName: e.target.value })}
+            placeholder="الاسم، مثلًا: أبو سعد"
+            aria-label="اسم المريض"
+          />
           <input
             className={input}
             dir="ltr"

@@ -57,8 +57,16 @@ export function ladderState(
   return { step, missed, paused, mode, fresh: false, todayDone };
 }
 
-/** Plain-language description of the ladder state for the patient. */
-export function ladderText(s: LadderState): string {
+/** Plain-language description of the ladder state, addressed to the patient or about the patient. */
+export function ladderText(s: LadderState, audience: 'patient' | 'other' = 'patient'): string {
+  if (audience === 'other') {
+    if (s.paused) return 'المتابعة متوقفة مؤقتًا (وضع خاص).';
+    if (s.fresh) return 'ما بدأ القياس بعد.';
+    if (s.step === 1) return s.todayDone ? 'قاس اليوم.' : 'ما فاته شي حتى الآن.';
+    if (s.step === 2) return 'فاته يوم بدون قياس.';
+    if (s.step === 3) return 'يومين بدون قياس.';
+    return `${s.missed >= 11 ? `${s.missed} يومًا` : `${s.missed} أيام`} بدون قياس، وأُبلغت العيادة.`;
+  }
   if (s.paused) return 'السلّم متوقف مؤقتًا بسبب الوضع الخاص.';
   if (s.fresh) return 'ابدأ أول قياس على السجادة.';
   if (s.step === 1) return s.todayDone ? 'قست اليوم. ممتاز.' : 'ما فاتك شي. قِس اليوم قبل الوضوء.';

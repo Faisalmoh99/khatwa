@@ -1,8 +1,10 @@
 import {
+  CalendarPlus,
   Camera,
   ChevronLeft,
   ClipboardCheck,
   Cpu,
+  FileText,
   HeartPulse,
   Rocket,
   Settings,
@@ -22,6 +24,8 @@ interface MoreItem {
 /** Secondary destinations. Each phase adds its screens here. */
 const MORE_ITEMS: MoreItem[] = [
   { to: '/quick', label: 'الفحص السريع', hint: 'ثلاث أسئلة بدل القياس', icon: ClipboardCheck },
+  { to: '/report', label: 'تقرير الزيارة', hint: 'للطبيب، مع QR وطباعة', icon: FileText },
+  { to: '/booking', label: 'حجز موعد', hint: 'طلب موعد (تجريبي)', icon: CalendarPlus },
   { to: '/photo', label: 'تصوير القدم', hint: 'صورة للعيادة، بدون تحليل', icon: Camera },
   { to: '/tips', label: 'نصائح العناية', hint: 'العناية اليومية بالقدم', icon: HeartPulse },
   { to: '/device', label: 'جهازي', hint: 'حالة السجادة وطريقة الوقوف', icon: Cpu },
