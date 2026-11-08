@@ -15,7 +15,8 @@
 
 ## هيكل المستودع
 ```
-app/            التطبيق (ينشر على Netlify)
+web/            التطبيق الاحترافي الجديد (Vite + React + TypeScript) — قيد البناء
+app/            النموذج الأول + المحاكي + صفحة الفيديو (ينشر على Netlify)
   index.html    التطبيق
   js/rules.js   محرك القاعدة (مع اختبارات)
   sim/          محاكي السجادة (قراءات وهمية بنفس شكل الجهاز)
@@ -30,6 +31,12 @@ tests/          اختبارات القاعدة
 ```bash
 npm test        # اختبارات القاعدة
 npm run dev     # سيرفر محلي على localhost:8080
+
+cd web
+npm install
+npm run dev     # التطبيق الجديد على localhost:5173  (?source=sim للمحاكاة بدون إنترنت)
+npm test        # اختبارات الوحدة (Vitest)
+npm run e2e     # اختبارات الواجهة بحجم iPhone (Playwright)
 ```
 التجهيز الكامل في [docs/SETUP.md](docs/SETUP.md). شكل البيانات في [docs/DATA_SCHEMA.md](docs/DATA_SCHEMA.md).
 

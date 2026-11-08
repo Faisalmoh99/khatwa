@@ -1,0 +1,72 @@
+/*
+ * Khatwa design tokens. The single source for colour, type, radius, spacing and motion.
+ * Users are older adults with diabetes: large type, large targets, AA contrast minimum.
+ * Every *-ink colour below passes 4.5:1 on both white and its matching *-soft background.
+ */
+:root {
+  /* Brand (from the logo) */
+  --kh-brand-950: #062a33;
+  --kh-brand-900: #0a3742;
+  --kh-brand-700: #0e4b5a;
+  --kh-brand-600: #145e70;
+  --kh-brand-500: #1a7182;
+  --kh-brand-300: #7fb6c0;
+  --kh-brand-100: #e3f0f2;
+  --kh-brand-50: #f1f8f9;
+
+  /* Neutrals */
+  --kh-bg: #f5f7f6;
+  --kh-surface: #ffffff;
+  --kh-ink: #10201f;
+  --kh-ink-2: #3c4d49;
+  --kh-mute: #4f605c;
+  --kh-line: #d5ddd9;
+  --kh-line-strong: #aab8b3;
+
+  /* Status levels: fill (dots, rings), ink (text), soft (backgrounds) */
+  --kh-green: #2e9e4f;
+  --kh-green-ink: #1b6e35;
+  --kh-green-soft: #e5f4e9;
+  --kh-yellow: #f2c230;
+  --kh-yellow-ink: #6e5100;
+  --kh-yellow-soft: #fbf1cc;
+  --kh-orange: #e8790a;
+  --kh-orange-ink: #9a4700;
+  --kh-orange-soft: #fde6cc;
+  --kh-red: #d6342c;
+  --kh-red-ink: #a8231c;
+  --kh-red-soft: #fadddb;
+  --kh-none: #8a948f;
+  --kh-none-ink: #4f605c;
+  --kh-none-soft: #eceff0;
+
+  /* Type */
+  --kh-font: 'IBM Plex Sans Arabic', system-ui, -apple-system, 'Segoe UI', Tahoma, sans-serif;
+  --kh-text-sm: 15px;
+  --kh-text-base: 17px;
+  --kh-text-lg: 19px;
+  --kh-text-xl: 22px;
+  --kh-text-2xl: 26px;
+  --kh-text-3xl: 32px;
+
+  /* Shape */
+  --kh-radius-sm: 10px;
+  --kh-radius: 16px;
+  --kh-radius-lg: 24px;
+  --kh-touch: 48px;
+  --kh-touch-lg: 60px;
+  --kh-shadow: 0 1px 2px rgb(10 55 66 / 0.06), 0 4px 16px rgb(10 55 66 / 0.06);
+  --kh-shadow-lg: 0 8px 32px rgb(10 55 66 / 0.14);
+
+  /* Motion */
+  --kh-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --kh-dur: 220ms;
+  --kh-dur-slow: 480ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --kh-dur: 0ms;
+    --kh-dur-slow: 0ms;
+  }
+}

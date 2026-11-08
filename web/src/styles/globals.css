@@ -1,0 +1,32 @@
+@import '@fontsource/ibm-plex-sans-arabic/arabic-400.css';
+@import '@fontsource/ibm-plex-sans-arabic/arabic-600.css';
+@import '@fontsource/ibm-plex-sans-arabic/latin-400.css';
+@import '@fontsource/ibm-plex-sans-arabic/latin-600.css';
+@import './tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    overflow-x: clip;
+    background: var(--kh-bg);
+  }
+  body {
+    @apply bg-bg font-sans text-base text-ink antialiased;
+    min-height: 100dvh;
+    -webkit-tap-highlight-color: transparent;
+  }
+  :focus-visible {
+    outline: 3px solid var(--kh-brand-500);
+    outline-offset: 2px;
+  }
+  /* Numbers are always isolated left-to-right so "-1.2" never flips to "1.2-" in RTL */
+  .num {
+    direction: ltr;
+    unicode-bidi: isolate;
+    font-variant-numeric: tabular-nums;
+  }
+}
