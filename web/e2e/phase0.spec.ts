@@ -85,7 +85,17 @@ test('no horizontal scroll at 390px', async ({ page }) => {
   await openSim(page);
   for (const path of ['/', '/settings']) {
     await page.goto(`${path}?source=sim`);
-    const w = await page.evaluate(() => document.documentElement.scrollWidth);
-    expect(w).toBeLessThanOrEqual(390);
+    await page.evaluate(() => document.fonts.ready);
+    const wide = await page.evaluate(() =>
+      [...document.querySelectorAll('body *')]
+        .map((e) => ({ e, r: e.getBoundingClientRect() }))
+        .filter(({ r }) => r.width > 0 && (r.right > 391 || r.left < -1))
+        .map(
+          ({ e, r }) =>
+            `${e.tagName.toLowerCase()}.${String(e.className).slice(0, 40)} [${Math.round(r.left)}..${Math.round(r.right)}]`,
+        )
+        .slice(0, 8),
+    );
+    expect(wide, `${path}: elements outside the 390px viewport`).toEqual([]);
   }
 });
