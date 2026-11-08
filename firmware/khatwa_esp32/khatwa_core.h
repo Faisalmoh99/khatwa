@@ -98,13 +98,16 @@ class Tracker {
         if (both) {
           phase_ = Phase::Placing;
           start_ = s.ms;
-          oneSince_ = 0;
+          oneActive_ = false;
           out.event = Event::Started;
         } else if (oneAlone) {
-          if (!oneSince_) oneSince_ = s.ms ? s.ms : 1;
+          if (!oneActive_) {
+            oneActive_ = true;
+            oneSince_ = s.ms;
+          }
           if (s.ms - oneSince_ >= p_.oneFootMs) return error(out, s, "قدم وحدة أو القدم مو في مكانها");
         } else {
-          oneSince_ = 0;
+          oneActive_ = false;
         }
         break;
 
@@ -140,13 +143,14 @@ class Tracker {
       case Phase::Error:
         if (releasedBoth) {
           phase_ = Phase::Idle;
-          oneSince_ = 0;
+          oneActive_ = false;
           out.event = Event::Released;
         }
         break;
     }
 
     out.phase = phase_;
+    if (phase_ == Phase::Error && !out.msg) out.msg = errMsg_;  // keep the reason on screen until they step off
     out.standing = both;
     out.elapsedSec = (phase_ == Phase::Placing || phase_ == Phase::Settling || out.hasScan) ? (s.ms - start_) / 1000 : 0;
     out.progress = progress(s.ms, out.hasScan);
@@ -158,11 +162,15 @@ class Tracker {
   Params p_;
   Phase phase_ = Phase::Idle;
   uint32_t start_ = 0, settleStart_ = 0, oneSince_ = 0;
+  bool oneActive_ = false;
+  const char* errMsg_ = nullptr;
   Sample win_[CAP];
   int n_ = 0;
 
   Step error(Step& out, const Sample&, const char* msg) {
     phase_ = Phase::Error;
+    oneActive_ = false;
+    errMsg_ = msg;
     n_ = 0;
     out.phase = phase_;
     out.msg = msg;

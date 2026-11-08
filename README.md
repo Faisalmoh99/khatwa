@@ -52,7 +52,9 @@ More detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · data contract: [doc
 | Adherence ladder: reminder → family → clinic, pause modes (travel, bandage, hospital) | AI analysis of foot photos (photos are stored for the clinic only) |
 | Assistant with fixed templates, Arabic voice output and voice input | Real push notifications (today: in-app reminder) |
 | Family WhatsApp message (wa.me), clinic list, audit log, visit report with QR and PDF | Medical-grade temperature sensors (TMP117) |
-| Rule lab on synthetic patients (labelled "simulation, numbers from our assumptions") | AI understanding of free text (planned, not enabled) |
+| Rule lab on synthetic patients (labelled "simulation, numbers from our assumptions") | |
+| AI (Claude Haiku): understands the patient's free text as one of 7 fixed reports, and an optional doctor summary labelled «ملخص آلي، راجع الأرقام» | |
+| ESP32 firmware: stand detection, stability, -127/85 handling, offline queue, USB line; contract-tested | |
 | Installable PWA that opens offline | Android app (Capacitor) |
 
 ## Repository
@@ -86,7 +88,7 @@ npm run dev                 # http://localhost:5173
 | `npm test` | Unit tests (Vitest): rule engine + parity with `rules.js`, levels, ladder, escalations, assistant, report, rule lab |
 | `npm run e2e` | Playwright at iPhone size: every screen, quality scenarios, accessibility (axe), PWA/offline |
 | `E2E_FIREBASE=1 E2E_DEVICE_PASSWORD=… npm run e2e` | Real Firebase: legacy `/sim/` → app live view → result, and an event round trip |
-| `npm run test:rules` | Firebase rules on the local emulator (14 cases) |
+| `npm run test:rules` | Firebase rules on the local emulator (15 cases, incl. JSON built by the firmware) |
 | `npm run check:device` | Read-only check of what the device wrote to Firebase against the data contract |
 | `npm run lint` / `npm run build` | ESLint + Prettier / production build (also copies the legacy pages) |
 
@@ -113,7 +115,11 @@ _Filled in after measuring (11–12 November). No scan time or accuracy figure i
 ## Transparency
 
 - **AI in development:** parts of the code and documentation were written with Claude (Anthropic) under the team's review.
-- **AI in the product:** none is active. The assistant answers only with fixed, pre-written templates; it escalates, never de-escalates, never diagnoses and never prescribes. Photos are never analysed.
+- **AI in the product:** Claude Haiku is used for two narrow jobs, through a Netlify Function (key kept in Netlify, never in the repo):
+  1. Classifying the patient's **free text** (never buttons) into one of 7 fixed reports (wound, blister, swelling, fever, new pain, redness, none). It is not called when the templates already found a clear red flag. The patient always gets a fixed template reply; when AI and templates disagree, the more serious wins; redness/new pain only asks the patient to confirm in the quick check.
+  2. An optional **doctor summary** of the report numbers, only when "ملخص للطبيب" is pressed, labelled «ملخص آلي، راجع الأرقام».
+
+  **The AI never sets or lowers a risk level** (that is `rules.ts` plus the patient's report). Text ≤ 300 characters, 30 requests per phone per day; any failure falls back silently to the templates. Photos are never analysed.
 - **Simulated numbers:** the rule lab compares alert rules on synthetic patients; its numbers come from our assumptions, listed on the screen. Virtual clinic patients are labelled «افتراضي».
 
 ---
@@ -125,6 +131,6 @@ _Filled in after measuring (11–12 November). No scan time or accuracy figure i
 - **أداة مراقبة تدعم الإحالة، مو تشخيص.** النموذج ما اختُبر سريريًا.
 - **مبني الآن:** 4 حساسات حرارة لكل قدم، وحساس ضغط تحت كل كعب للتأكد من الوقوف، وقاعدة IWGDF، وسلّم المتابعة، والمساعد بقوالب ثابتة، وتقرير الزيارة، وواجهة العائلة والعيادة، والتطبيق يشتغل بدون نت.
 - **إصدار قادم:** خريطة الضغط، والتروية، وتحليل الصور بالذكاء الاصطناعي، والإشعارات الحقيقية، وحساسات TMP117.
-- **الشفافية:** استُخدم Claude في كتابة أجزاء من الكود والوثائق. المساعد ما يستخدم ذكاء اصطناعي، يرد بقوالب مكتوبة مسبقًا. أرقام مختبر القاعدة من افتراضاتنا.
+- **الشفافية:** استُخدم Claude في كتابة أجزاء من الكود والوثائق. وفي التطبيق: Claude Haiku يفهم كلام المريض الحر ويحوّله لواحد من 7 بلاغات ثابتة، ويكتب ملخص اختياري للطبيب. **ما يغيّر مستوى الخطر أبدًا**، والرد للمريض دايمًا من القوالب. أرقام مختبر القاعدة من افتراضاتنا.
 
 التشغيل: `cd web && npm install && npm run dev` ثم افتح `localhost:5173/?source=sim&as=patient`.

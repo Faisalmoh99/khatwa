@@ -40,7 +40,7 @@ test('AI hears redness → the patient is asked to confirm in the quick check (A
 test('no model call for buttons or for a clear red flag the templates already caught', async ({ page }) => {
   const calls = await mockAi(page, () => ({ report: 'none' }));
   await go(page, '/assistant');
-  await page.getByTestId('quick-replies').getByRole('button').first().click();
+  await page.getByTestId('quick-replies').getByRole('button', { name: 'مسافر' }).click();
   await page.getByTestId('chat-input').fill('فيه سائل يطلع من جرح');
   await page.getByTestId('chat-send').click();
   await expect(page.getByTestId('chat-urgent')).toBeVisible();

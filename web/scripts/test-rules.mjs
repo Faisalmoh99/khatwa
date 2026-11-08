@@ -3,7 +3,10 @@
  *   firebase emulators:exec --only database --project demo-khatwa "node web/scripts/test-rules.mjs"
  * Rules must pass all cases before `firebase deploy --only database`.
  */
-import { readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, readFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { after, before, beforeEach, test } from 'node:test';
 import { assertFails, assertSucceeds, initializeTestEnvironment } from '@firebase/rules-unit-testing';
 import { get, push, ref, remove, serverTimestamp, set, update } from 'firebase/database';
@@ -178,4 +181,20 @@ test('14. reads need sign-in; fake device ids and unknown paths rejected', async
   await assertFails(push(ref(visitor(), 'devices/hacker device/events'), event()));
   await assertFails(set(ref(device(), `${D}/whatever`), 1));
   await assertFails(set(ref(visitor(), 'other/path'), 1));
+});
+
+test('15. JSON built by the ESP32 firmware code is accepted as written (status, live, scans)', async () => {
+  const fw = new URL('../../firmware/', import.meta.url).pathname;
+  const bin = join(mkdtempSync(join(tmpdir(), 'kh-fw-')), 'test_core');
+  execFileSync('g++', ['-std=c++17', `-I${fw}khatwa_esp32`, `${fw}test/test_core.cpp`, '-o', bin]);
+  const lines = execFileSync(bin, ['--samples'], { encoding: 'utf8' }).trim().split('\n');
+  const db = device();
+  for (const line of lines) {
+    const i = line.indexOf(' ');
+    const kind = line.slice(0, i);
+    const json = JSON.parse(line.slice(i + 1));
+    if (kind === 'status') await assertSucceeds(update(ref(db, `${D}/status`), json));
+    if (kind === 'live') await assertSucceeds(set(ref(db, `${D}/live`), json));
+    if (kind === 'scan') await assertSucceeds(push(ref(db, `${D}/scans`), json));
+  }
 });
