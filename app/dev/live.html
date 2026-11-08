@@ -44,13 +44,15 @@
 <script type="module">
 import * as K from '../js/khatwa-firebase.js';
 import { SITES, THRESH, buildDays, evaluate, describe } from '../js/rules.js';
+// Data from Firebase is escaped before it goes into HTML (review finding R4).
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const $ = id => document.getElementById(id);
 const AR = { idle: 'ينتظر', placing: 'تحقق الوقوف', settling: 'ينتظر الاستقرار', done: 'تم', error: 'مرفوض' };
 let scans = {};
 function drawDays() {
   const mode = $('demo').checked ? 'demo' : 'real';
   const rows = evaluate(buildDays(scans, { mode }));
-  $('days').innerHTML = rows.slice().reverse().map(r => `<tr><td>${r.key}</td><td><span class="lv ${r.level}"></span>${{ green: 'أخضر', yellow: 'أصفر', orange: 'برتقالي', none: 'مرفوض' }[r.level]}</td><td>${describe(r)}</td><td>${r.attempts}</td><td>${r.scan.source || '-'}${r.scan.backfill ? ' (قديم)' : ''}</td></tr>`).join('') || '<tr><td colspan="5">ما فيه قراءات بعد</td></tr>';
+  $('days').innerHTML = rows.slice().reverse().map(r => `<tr><td>${esc(r.key)}</td><td><span class="lv ${r.level}"></span>${{ green: 'أخضر', yellow: 'أصفر', orange: 'برتقالي', none: 'مرفوض' }[r.level]}</td><td>${esc(describe(r))}</td><td>${esc(r.attempts)}</td><td>${esc(r.scan.source || '-')}${r.scan.backfill ? ' (قديم)' : ''}</td></tr>`).join('') || '<tr><td colspan="5">ما فيه قراءات بعد</td></tr>';
 }
 $('demo').onchange = drawDays;
 (async () => {
@@ -66,7 +68,7 @@ $('demo').onchange = drawDays;
       $('phase').textContent = AR[l.phase] || l.phase;
       $('liveInfo').textContent = `${l.msg || ''} · ضغط ${l.fsrL ?? '-'} / ${l.fsrR ?? '-'} · ${l.elapsedSec ?? 0} ث`;
       const L = l.L || [], R = l.R || [];
-      $('live').innerHTML = SITES.map((s, i) => { const d = L[i] > -100 && R[i] > -100 && L[i] ? +(R[i] - L[i]).toFixed(2) : null; return `<tr><td>${s.ar}</td><td>${L[i] ? (L[i] <= -100 ? 'عطل' : L[i].toFixed(2)) : '-'}</td><td>${R[i] ? (R[i] <= -100 ? 'عطل' : R[i].toFixed(2)) : '-'}</td><td class="${d !== null && Math.abs(d) > THRESH ? 'hot' : ''}">${d ?? '-'}</td></tr>`; }).join('');
+      $('live').innerHTML = SITES.map((s, i) => { const d = L[i] > -100 && R[i] > -100 && L[i] ? +(R[i] - L[i]).toFixed(2) : null; return `<tr><td>${s.ar}</td><td>${L[i] ? (L[i] <= -100 ? 'عطل' : esc(Number(L[i]).toFixed(2))) : '-'}</td><td>${R[i] ? (R[i] <= -100 ? 'عطل' : esc(Number(R[i]).toFixed(2))) : '-'}</td><td class="${d !== null && Math.abs(d) > THRESH ? 'hot' : ''}">${d ?? '-'}</td></tr>`; }).join('');
     },
     onScans(obj) { scans = obj; drawDays(); },
   });

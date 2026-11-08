@@ -2,7 +2,7 @@
 // يستخدمها التطبيق والمحاكي وصفحة الفحص. شكل البيانات موثّق في docs/DATA_SCHEMA.md
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { getAuth, signInAnonymously, signInWithEmailAndPassword, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import {
   getDatabase, ref, onValue, set, update, push, remove, serverTimestamp,
   query, orderByChild, limitToLast,
@@ -17,17 +17,37 @@ export function configured() {
   return firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith('REPLACE');
 }
 
-/** يتصل ويسجّل دخول مجهول. يرجع Promise تنتهي لما يصير جاهز */
-export function init() {
-  if (_ready) return _ready;
-  if (!configured()) return Promise.reject(new Error('عبّئ app/js/firebase-config.js أول'));
+function ensureApp() {
+  if (_app) return;
+  if (!configured()) throw new Error('عبّئ app/js/firebase-config.js أول');
   _app = initializeApp(firebaseConfig);
   _db = getDatabase(_app);
   _auth = getAuth(_app);
+}
+
+/** يتصل ويسجّل دخول مجهول (قراءة + أحداث). يعيد المحاولة لو فشل (ملاحظة المراجعة R6). */
+export function init() {
+  if (_ready) return _ready;
+  try { ensureApp(); } catch (e) { return Promise.reject(e); }
   _ready = new Promise((resolve, reject) => {
     const off = onAuthStateChanged(_auth, u => { if (u) { off(); resolve({ uid: u.uid }); } });
-    signInAnonymously(_auth).catch(reject);
+    const attempt = n => signInAnonymously(_auth).catch(err => {
+      if (n >= 4) { _ready = null; reject(err); return; }
+      setTimeout(() => attempt(n + 1), 1000 * 2 ** n);
+    });
+    attempt(0);
   });
+  return _ready;
+}
+
+/**
+ * دخول بحساب الجهاز (للمحاكي): قواعد قاعدة البيانات تسمح بكتابة status/live/scans لهذا الحساب فقط.
+ * كلمة المرور يكتبها المستخدم في الصفحة، وما تنحفظ في الكود.
+ */
+export function initDevice(email, password) {
+  try { ensureApp(); } catch (e) { return Promise.reject(e); }
+  _ready = signInWithEmailAndPassword(_auth, email, password).then(c => ({ uid: c.user.uid }));
+  _ready.catch(() => { _ready = null; });
   return _ready;
 }
 

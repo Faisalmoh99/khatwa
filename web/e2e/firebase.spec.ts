@@ -2,12 +2,17 @@ import { expect, test } from '@playwright/test';
 import { shot } from './helpers';
 
 /**
- * Acceptance against the real Firebase project (needs internet). Run: E2E_FIREBASE=1 npx playwright test
+ * Acceptance against the real Firebase project (needs internet).
+ * Run: E2E_FIREBASE=1 E2E_DEVICE_PASSWORD=… npx playwright test   (password never stored in the repo)
  * 1) The legacy /sim/ writes like the ESP32 and the new app shows it live → result.
  *    Writes one simulated scan (source "sim") to devices/khatwa-01, as the simulator always has.
  * 2) A quick-check event round-trips through Firebase, on a separate test device (khatwa-e2e).
  */
 test('@firebase legacy /sim/ → Firebase → new app (live, then result)', async ({ browser }) => {
+  test.skip(
+    !process.env.E2E_DEVICE_PASSWORD,
+    'needs E2E_DEVICE_PASSWORD (device account) since the rules allow only the device to write scans',
+  );
   test.setTimeout(120_000);
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: 'ar-SA' });
   const app = await ctx.newPage();
@@ -15,7 +20,10 @@ test('@firebase legacy /sim/ → Firebase → new app (live, then result)', asyn
 
   await app.goto('/scan?source=firebase&as=patient&nosplash=1&dev=khatwa-01');
   await sim.goto('/sim/');
-  await expect(sim.locator('#conn')).toHaveText('متصل', { timeout: 30_000 });
+  if (process.env.E2E_DEVICE_EMAIL) await sim.locator('#devEmail').fill(process.env.E2E_DEVICE_EMAIL);
+  await sim.locator('#devPass').fill(process.env.E2E_DEVICE_PASSWORD!);
+  await sim.locator('#loginBtn').click();
+  await expect(sim.locator('#conn')).toHaveText('متصل بحساب الجهاز', { timeout: 30_000 });
   await expect(app.getByTestId('scan-offline')).toBeHidden({ timeout: 30_000 });
 
   await sim.locator('#scn').selectOption('normal');
