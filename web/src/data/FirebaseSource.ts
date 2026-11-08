@@ -30,6 +30,9 @@ import {
   type Live,
   LiveSchema,
   type NewEvent,
+  type NewPhoto,
+  type Photo,
+  PhotoSchema,
   isOnline,
   parseCollection,
   type Scan,
@@ -57,6 +60,7 @@ export class FirebaseSource implements DataSource {
   private live = new Channel<Live | null>();
   private scans = new Channel<{ scans: Scan[]; rejected: RejectedRecord[] }>();
   private events = new Channel<KhEvent[]>();
+  private photos = new Channel<Photo[]>();
 
   constructor(readonly deviceId: string) {}
 
@@ -142,6 +146,14 @@ export class FirebaseSource implements DataSource {
         const { items, rejected } = parseCollection(ScanSchema, snap.val());
         this.scans.emit({ scans: items as Scan[], rejected });
       }),
+      onValue(
+        query(ref(this.db, this.path('photos')), orderByChild('ts'), limitToLast(12)),
+        (snap) => {
+          const { items } = parseCollection(PhotoSchema, snap.val());
+          this.photos.emit(items as Photo[]);
+        },
+        () => this.photos.emit([]),
+      ),
       onValue(query(ref(this.db, this.path('events')), orderByChild('ts'), limitToLast(300)), (snap) => {
         const { items } = parseCollection(EventSchema, snap.val());
         this.events.emit(items as KhEvent[]);
@@ -157,7 +169,7 @@ export class FirebaseSource implements DataSource {
     if (this.retryTimer) clearTimeout(this.retryTimer);
     this.offs.forEach((f) => f());
     this.offs = [];
-    [this.conn, this.status, this.live, this.scans, this.events].forEach((c) => c.clear());
+    [this.conn, this.status, this.live, this.scans, this.events, this.photos].forEach((c) => c.clear());
   }
 
   subscribeConnection(cb: (c: ConnectionState) => void) {
@@ -174,6 +186,14 @@ export class FirebaseSource implements DataSource {
   }
   subscribeEvents(cb: (e: KhEvent[]) => void) {
     return this.events.subscribe(cb);
+  }
+
+  subscribePhotos(cb: (p: Photo[]) => void) {
+    return this.photos.subscribe(cb);
+  }
+  async writePhoto(p: NewPhoto) {
+    await this.ready;
+    await push(ref(this.db, this.path('photos')), { ...stripUndefined(p), ts: serverTimestamp() });
   }
 
   async writeEvent(e: NewEvent) {

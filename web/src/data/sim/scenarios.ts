@@ -109,6 +109,14 @@ export const DAYS_SCENARIOS: DaysScenario[] = [
     hot: () => [],
     missing: Array.from({ length: 15 }, (_, i) => 16 + i),
   },
+  ...[1, 2, 3].map((gap) => ({
+    id: `stop${gap}`,
+    ar: gap === 1 ? 'ما قاس اليوم' : gap === 2 ? 'ما قاس من يومين' : 'ما قاس من 3 أيام',
+    desc: 'سليم، ثم توقف عن القياس. يوضّح سلّم المتابعة.',
+    seed: 11,
+    hot: () => [],
+    missing: Array.from({ length: gap }, (_, i) => 30 - i),
+  })),
 ];
 
 /**

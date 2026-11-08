@@ -86,6 +86,17 @@ export type KhEvent = z.infer<typeof EventSchema> & { id: string };
 /** What the app sends. `ts` is filled with the server time by the source. */
 export type NewEvent = Omit<z.infer<typeof EventSchema>, 'ts'>;
 
+/** Foot photo for the clinic. Thumbnail only (≤ 60 KB). Never analysed. */
+export const PhotoSchema = z.object({
+  role: z.enum(['base', 'today']),
+  site: z.object({ foot: z.enum(['L', 'R']), i: z.number().int().min(0).max(3) }).optional(),
+  jpeg: z.string().startsWith('data:image/jpeg;base64,').max(90_000),
+  day: z.string().optional(),
+  ts: z.number(),
+});
+export type Photo = z.infer<typeof PhotoSchema> & { id: string };
+export type NewPhoto = Omit<z.infer<typeof PhotoSchema>, 'ts'>;
+
 /** Line sent by the ESP32 over USB serial at 115200 baud (same shape as live). */
 export const SerialLineSchema = z.object({
   L: arr4,

@@ -9,6 +9,7 @@ import { AppShell } from '@/components/layout/AppShell';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ago, arDate, dayWord } from '@/lib/format';
+import { parseHHMM, riyadhMinutes } from '@/lib/ladder';
 import { MODE_AR } from '@/lib/level';
 import { serverNow, useDevice } from '@/store/device';
 import { useDayViews, useLadder } from '@/store/selectors';
@@ -32,7 +33,8 @@ export function Home() {
   const loaded = useDevice((s) => s.loaded);
   const streak = streakOf(ladder.views);
   const now = serverNow();
-  const reminderDue = ladder.step >= 2 && !ladder.todayDone && !ladder.paused;
+  const reminderTime = useSettings((s) => s.reminderTime);
+  const reminderDue = !ladder.todayDone && !ladder.paused && riyadhMinutes(now) >= parseHHMM(reminderTime);
 
   return (
     <AppShell nav={PATIENT_NAV}>
@@ -67,6 +69,9 @@ export function Home() {
         >
           <BellRing className="size-7 shrink-0 text-lv-yellow-ink" aria-hidden />
           <p className="flex-1 text-base font-semibold text-ink">حان وقت قياس اليوم.</p>
+          <Button variant="ghost" asChild>
+            <Link to="/scan">قِس الحين</Link>
+          </Button>
         </Card>
       )}
 

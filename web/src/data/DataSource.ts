@@ -1,4 +1,4 @@
-import type { DeviceStatus, KhEvent, Live, NewEvent, Scan } from './types';
+import type { DeviceStatus, KhEvent, Live, NewEvent, NewPhoto, Photo, Scan } from './types';
 
 export type SourceKind = 'firebase' | 'simulation' | 'serial';
 export type Unsubscribe = () => void;
@@ -34,6 +34,8 @@ export interface DataSource {
   subscribeScans(cb: (scans: Scan[], rejected: RejectedRecord[]) => void): Unsubscribe;
   subscribeEvents(cb: (events: KhEvent[]) => void): Unsubscribe;
   writeEvent(e: NewEvent): Promise<void>;
+  subscribePhotos(cb: (photos: Photo[]) => void): Unsubscribe;
+  writePhoto(p: NewPhoto): Promise<void>;
   /** Current time on the server clock (ms). Used for "online" and day keys. */
   serverNow(): number;
 }

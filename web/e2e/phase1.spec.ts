@@ -142,7 +142,7 @@ test.describe('phase 1: quick check, WhatsApp, device, settings', () => {
     const events = await page.evaluate(
       () => JSON.parse(localStorage.getItem('kh.sim.khatwa-01') || '{}').events,
     );
-    expect(events).toEqual([
+    expect(events.filter((e: { kind: string }) => e.kind === 'quickcheck')).toEqual([
       expect.objectContaining({ kind: 'quickcheck', data: { skin: 'wound', pain: 'ok', care: 'done' } }),
     ]);
     await open(page, '/home');

@@ -16,7 +16,7 @@ import {
   STABLE_DELTA,
   STABLE_WIN,
 } from './sim/scenarios';
-import type { DeviceStatus, KhEvent, Live, NewEvent, Scan } from './types';
+import type { DeviceStatus, KhEvent, Live, NewEvent, NewPhoto, Photo, Scan } from './types';
 
 const FW = 'sim-web-0.2.0';
 const ZERO4 = [0, 0, 0, 0];
@@ -50,6 +50,8 @@ export class SimulationSource implements DataSource {
   private live = new Channel<Live | null>();
   private scansCh = new Channel<{ scans: Scan[]; rejected: RejectedRecord[] }>();
   private eventsCh = new Channel<KhEvent[]>();
+  private photosCh = new Channel<Photo[]>();
+  private photos: Photo[] = [];
   private scans: Scan[] = [];
   private events: KhEvent[] = [];
   private hbTimer: ReturnType<typeof setInterval> | null = null;
@@ -85,6 +87,7 @@ export class SimulationSource implements DataSource {
     this.conn.emit({ connected: true, ready: true });
     this.emitScans();
     this.emitEvents();
+    this.photosCh.emit(this.photos);
     this.beat();
     this.hbTimer = setInterval(() => this.beat(), 10_000);
     this.setLive(idle());
@@ -94,7 +97,7 @@ export class SimulationSource implements DataSource {
     [this.hbTimer, this.tickTimer].forEach((t) => t && clearInterval(t));
     if (this.idleTimer) clearTimeout(this.idleTimer);
     this.sess = null;
-    [this.conn, this.status, this.live, this.scansCh, this.eventsCh].forEach((c) => c.clear());
+    [this.conn, this.status, this.live, this.scansCh, this.eventsCh, this.photosCh].forEach((c) => c.clear());
   }
 
   subscribeConnection(cb: (c: ConnectionState) => void) {
@@ -117,6 +120,15 @@ export class SimulationSource implements DataSource {
     this.events = [...this.events, { ...e, ts: this.serverNow(), id: this.newId() }];
     this.save();
     this.emitEvents();
+  }
+
+  subscribePhotos(cb: (p: Photo[]) => void) {
+    return this.photosCh.subscribe(cb);
+  }
+  async writePhoto(p: NewPhoto) {
+    this.photos = [...this.photos, { ...p, ts: this.serverNow(), id: this.newId() }].slice(-12);
+    this.save();
+    this.photosCh.emit(this.photos);
   }
 
   /* ---------------- Simulator controls (only used by the simulation panel) ---------------- */
@@ -334,7 +346,8 @@ export class SimulationSource implements DataSource {
     try {
       const raw = this.store?.getItem(this.key);
       if (!raw) return;
-      const d = JSON.parse(raw) as { scans?: Scan[]; events?: KhEvent[] };
+      const d = JSON.parse(raw) as { scans?: Scan[]; events?: KhEvent[]; photos?: Photo[] };
+      this.photos = Array.isArray(d.photos) ? d.photos : [];
       this.scans = Array.isArray(d.scans) ? d.scans : [];
       this.events = Array.isArray(d.events) ? d.events : [];
     } catch {
@@ -343,7 +356,10 @@ export class SimulationSource implements DataSource {
   }
   private save() {
     try {
-      this.store?.setItem(this.key, JSON.stringify({ scans: this.scans, events: this.events }));
+      this.store?.setItem(
+        this.key,
+        JSON.stringify({ scans: this.scans, events: this.events, photos: this.photos }),
+      );
     } catch {
       /* storage full or blocked: keep in memory only */
     }

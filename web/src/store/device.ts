@@ -1,7 +1,7 @@
 /** Device data exactly as delivered by the active DataSource. Screens read; only the binder writes. */
 import { create } from 'zustand';
 import type { ConnectionState, DataSource, RejectedRecord } from '@/data/DataSource';
-import type { DeviceStatus, KhEvent, Live, NewEvent, Scan } from '@/data/types';
+import type { DeviceStatus, KhEvent, Live, NewEvent, NewPhoto, Photo, Scan } from '@/data/types';
 
 export interface DeviceState {
   source: DataSource | null;
@@ -12,6 +12,9 @@ export interface DeviceState {
   scans: Scan[];
   rejected: RejectedRecord[];
   events: KhEvent[];
+  photos: Photo[];
+  /** True once the first events snapshot arrived (escalation writer waits for it). */
+  eventsLoaded: boolean;
   /** True once the first scans snapshot arrived (avoids flashing "no data"). */
   loaded: boolean;
 }
@@ -24,6 +27,8 @@ export const initialDevice: Omit<DeviceState, 'source'> = {
   scans: [],
   rejected: [],
   events: [],
+  photos: [],
+  eventsLoaded: false,
   loaded: false,
 };
 
@@ -51,3 +56,7 @@ export function activeSource(timeoutMs = 10_000): Promise<DataSource> {
 }
 
 export const serverNow = () => useDevice.getState().source?.serverNow() ?? Date.now();
+
+export async function writePhoto(p: NewPhoto) {
+  await (await activeSource()).writePhoto(p);
+}

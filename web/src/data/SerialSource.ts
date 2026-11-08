@@ -7,6 +7,8 @@
 import { Channel, type ConnectionState, type DataSource, type RejectedRecord } from './DataSource';
 import { StabilityTracker } from './stability';
 import {
+  type NewPhoto,
+  type Photo,
   type DeviceStatus,
   type KhEvent,
   type Live,
@@ -36,6 +38,8 @@ export class SerialSource implements DataSource {
   private live = new Channel<Live | null>();
   private scansCh = new Channel<{ scans: Scan[]; rejected: RejectedRecord[] }>();
   private eventsCh = new Channel<KhEvent[]>();
+  private photosCh = new Channel<Photo[]>();
+  private photos: Photo[] = [];
   private scans: Scan[] = [];
   private events: KhEvent[] = [];
   private port: SerialPort | null = null;
@@ -61,6 +65,7 @@ export class SerialSource implements DataSource {
     });
     this.scansCh.emit({ scans: [], rejected: [] });
     this.eventsCh.emit([]);
+    this.photosCh.emit([]);
     this.live.emit(null);
     this.status.emit({ status: null, online: false });
     this.timer = setInterval(() => this.emitStatus(), 2000);
@@ -157,6 +162,13 @@ export class SerialSource implements DataSource {
   }
   subscribeEvents(cb: (e: KhEvent[]) => void) {
     return this.eventsCh.subscribe(cb);
+  }
+  subscribePhotos(cb: (p: Photo[]) => void) {
+    return this.photosCh.subscribe(cb);
+  }
+  async writePhoto(p: NewPhoto) {
+    this.photos = [...this.photos, { ...p, ts: this.serverNow(), id: `usb-ph-${this.seq++}` }].slice(-12);
+    this.photosCh.emit(this.photos);
   }
   async writeEvent(e: NewEvent) {
     this.events = [...this.events, { ...e, ts: this.serverNow(), id: `usb-ev-${this.seq++}` }];

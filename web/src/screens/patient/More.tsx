@@ -1,4 +1,13 @@
-import { ChevronLeft, ClipboardCheck, Cpu, Settings, type LucideIcon } from 'lucide-react';
+import {
+  Camera,
+  ChevronLeft,
+  ClipboardCheck,
+  Cpu,
+  HeartPulse,
+  Rocket,
+  Settings,
+  type LucideIcon,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { PATIENT_NAV } from '@/components/layout/navs';
 import { AppShell } from '@/components/layout/AppShell';
@@ -13,7 +22,10 @@ interface MoreItem {
 /** Secondary destinations. Each phase adds its screens here. */
 const MORE_ITEMS: MoreItem[] = [
   { to: '/quick', label: 'الفحص السريع', hint: 'ثلاث أسئلة بدل القياس', icon: ClipboardCheck },
+  { to: '/photo', label: 'تصوير القدم', hint: 'صورة للعيادة، بدون تحليل', icon: Camera },
+  { to: '/tips', label: 'نصائح العناية', hint: 'العناية اليومية بالقدم', icon: HeartPulse },
   { to: '/device', label: 'جهازي', hint: 'حالة السجادة وطريقة الوقوف', icon: Cpu },
+  { to: '/coming-soon', label: 'قادم قريبًا', hint: 'ميزات نخطط لها', icon: Rocket },
   { to: '/settings', label: 'الإعدادات', hint: 'العائلة، التذكير، الموافقات', icon: Settings },
 ];
 

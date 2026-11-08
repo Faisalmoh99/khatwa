@@ -5,7 +5,12 @@ import { Login } from '@/screens/intro/Login';
 import { Onboarding } from '@/screens/intro/Onboarding';
 import { RoleSelect } from '@/screens/intro/RoleSelect';
 import { Splash } from '@/screens/intro/Splash';
+import { Assistant } from '@/screens/patient/Assistant';
+import { ComingSoon } from '@/screens/patient/ComingSoon';
 import { Device } from '@/screens/patient/Device';
+import { History } from '@/screens/patient/History';
+import { Photo } from '@/screens/patient/Photo';
+import { Tips } from '@/screens/patient/Tips';
 import { Home } from '@/screens/patient/Home';
 import { More } from '@/screens/patient/More';
 import { QuickCheck } from '@/screens/patient/QuickCheck';
@@ -13,6 +18,7 @@ import { Result } from '@/screens/patient/Result';
 import { Scan } from '@/screens/patient/Scan';
 import { Settings } from '@/screens/patient/Settings';
 import { type Role, useSettings } from '@/store/settings';
+import { useEscalationWriter } from '@/store/useEscalationWriter';
 import { useSourceBinding } from '@/store/useSourceBinding';
 import { RolePlaceholder } from '@/screens/RolePlaceholder';
 
@@ -66,6 +72,7 @@ function useSplash() {
 
 export function App() {
   useSourceBinding();
+  useEscalationWriter();
   const splash = useSplash();
   const P = (el: ReactNode) => <RequireRole role="patient">{el}</RequireRole>;
   const ANY = (el: ReactNode) => <RequireRole role={['patient', 'family', 'clinic']}>{el}</RequireRole>;
@@ -87,6 +94,11 @@ export function App() {
           <Route path="/result" element={P(<Result />)} />
           <Route path="/quick" element={P(<QuickCheck />)} />
           <Route path="/more" element={P(<More />)} />
+          <Route path="/history" element={P(<History />)} />
+          <Route path="/assistant" element={P(<Assistant />)} />
+          <Route path="/photo" element={P(<Photo />)} />
+          <Route path="/tips" element={ANY(<Tips />)} />
+          <Route path="/coming-soon" element={ANY(<ComingSoon />)} />
           <Route path="/device" element={ANY(<Device />)} />
           <Route path="/settings" element={ANY(<Settings />)} />
 

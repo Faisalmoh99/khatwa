@@ -1,4 +1,4 @@
-import { ClipboardCheck, House, MessageCircle, Footprints } from 'lucide-react';
+import { Camera, ClipboardCheck, House, MessageCircle, Footprints } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { FootMap } from '@/components/kh/FootMap';
 import { LevelHero } from '@/components/kh/LevelHero';
@@ -70,6 +70,13 @@ export function Result() {
 
       {(view.level === 'orange' || view.level === 'red' || view.level === 'yellow') && (
         <WhatsAppButton view={view} />
+      )}
+      {(view.level === 'orange' || view.level === 'red') && (
+        <Button variant="secondary" size="lg" asChild>
+          <Link to="/photo">
+            <Camera /> صوّر المكان للعيادة
+          </Link>
+        </Button>
       )}
 
       <div className="grid grid-cols-2 gap-3">

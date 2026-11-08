@@ -27,7 +27,8 @@ export function useSourceBinding() {
         s.subscribeStatus((status, online) => useDevice.setState({ status, online })),
         s.subscribeLive((live) => useDevice.setState({ live })),
         s.subscribeScans((scans, rejected) => useDevice.setState({ scans, rejected, loaded: true })),
-        s.subscribeEvents((events) => useDevice.setState({ events })),
+        s.subscribeEvents((events) => useDevice.setState({ events, eventsLoaded: true })),
+        s.subscribePhotos((photos) => useDevice.setState({ photos })),
       ];
       void s.start();
     });
