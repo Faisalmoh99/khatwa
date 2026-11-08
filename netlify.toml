@@ -1,0 +1,4 @@
+# النشر على Netlify: بدون build، المجلد المنشور هو app
+[build]
+  publish = "app"
+  command = ""
