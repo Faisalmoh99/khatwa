@@ -149,6 +149,9 @@ static void onLive(AsyncResult& r) {
 
 static void onScan(AsyncResult& r) {
   if (!r.isError() && !r.available()) return;
+  // The library can report the same push twice. Without this guard the queue count went to -1 and every
+  // later scan stayed in RAM unsent (found on the Wokwi virtual mat: the second stand was never saved).
+  if (!scanBusy) return;
   scanBusy = false;
   if (r.isError()) {
     Serial.printf("# scan not sent (%s), will retry\n", r.error().message().c_str());
