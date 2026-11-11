@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useNow } from '@/hooks/useNow';
 import { buildPatient, orderPatients, type PatientModel, virtualPatients } from '@/lib/patients';
 import { serverNow, useDevice } from './device';
-import { useSettings } from './settings';
+import { shownPatientName, useSettings } from './settings';
 
 export const REAL_ID = 'real';
 
@@ -11,7 +11,7 @@ export function useRealPatient(): PatientModel {
   const scans = useDevice((s) => s.scans);
   const events = useDevice((s) => s.events);
   const photos = useDevice((s) => s.photos);
-  const name = useSettings((s) => s.patientName);
+  const name = useSettings((s) => shownPatientName(s, 'مريض خطوة 01'));
   const reminder = useSettings((s) => s.reminderTime);
   const demo = useSettings((s) => s.demoMode);
   const since = useSettings((s) => s.demoSince);
@@ -19,7 +19,7 @@ export function useRealPatient(): PatientModel {
   return useMemo(() => {
     void tick;
     return buildPatient(
-      { id: REAL_ID, name: name.trim() || 'مريض خطوة 01', age: null, virtual: false, scans, events, photos },
+      { id: REAL_ID, name, age: null, virtual: false, scans, events, photos },
       serverNow(),
       reminder,
       { on: demo, since },

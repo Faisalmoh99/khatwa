@@ -62,7 +62,7 @@ test('Wokwi source reads devices/khatwa-demo, shows its banner, and never writes
   // The switch does not open writes for Wokwi.
   await page.getByTestId('patient-device').click();
   await open(page, '/device');
-  await expect(page.getByText('khatwa-demo')).toBeVisible();
+  await expect(page.getByTestId('device-id')).toHaveText('السجادة الافتراضية (Wokwi)');
   await open(page, '/quick');
   await page.getByTestId('quick-skin-wound').click();
   await page.getByTestId('quick-pain-ok').click();
@@ -209,4 +209,15 @@ test('bottom navigation is opaque (page text never shows through it)', async ({ 
     .last()
     .evaluate((e) => getComputedStyle(e).backgroundColor);
   expect(bg).toMatch(/^rgb\(/); // rgb(...) = no alpha; rgba(..., 0.95) was see-through
+});
+
+test('simulated data: «أبو سعد» as the patient name, «جهاز محاكاة» on the device screen, no device id', async ({
+  page,
+}) => {
+  await go(page, '/device');
+  await expect(page.getByTestId('device-id')).toHaveText('جهاز محاكاة');
+  await expect(page.getByText('khatwa-01')).toHaveCount(0);
+  await open(page, '/clinic?as=clinic');
+  await expect(page.getByTestId('patient-real')).toContainText('أبو سعد');
+  await expect(page.getByText('مريض خطوة 01')).toHaveCount(0);
 });

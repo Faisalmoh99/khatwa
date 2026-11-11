@@ -89,8 +89,17 @@ export function Device() {
                 ? 'محاكي'
                 : '—'}
           </Row>
-          <Row k="رقم الجهاز">
-            <Num>{deviceId}</Num>
+          <Row k="الجهاز">
+            {/* Simulated data never shows a device id as if it were the real mat (honesty rule, as in the report) */}
+            <span data-testid="device-id">
+              {kind === 'simulation' ? (
+                'جهاز محاكاة'
+              ) : kind === 'wokwi' ? (
+                'السجادة الافتراضية (Wokwi)'
+              ) : (
+                <Num>{deviceId}</Num>
+              )}
+            </span>
           </Row>
           {status?.rssi !== undefined && (
             <Row k="قوة الواي فاي">{status.rssi > -60 ? 'قوية' : status.rssi > -75 ? 'متوسطة' : 'ضعيفة'}</Row>

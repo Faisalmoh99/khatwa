@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import type { DayView } from '@/lib/level';
 import { familyMessage, sendLabel, whatsappLink } from '@/lib/whatsapp';
-import { useSettings } from '@/store/settings';
+import { shownPatientName, useSettings } from '@/store/settings';
 
 /** Opens WhatsApp with a ready message to the family contact. Respects the family consent. */
 export function WhatsAppButton({
@@ -16,7 +16,8 @@ export function WhatsAppButton({
   const consent = useSettings((s) => s.consents.family);
   const phone = useSettings((s) => s.familyPhone);
   const name = useSettings((s) => s.familyName);
-  const patient = useSettings((s) => s.patientName);
+  // empty = «المريض» in the message (familyMessage), except on simulated data: «أبو سعد»
+  const patient = useSettings((s) => shownPatientName(s, ''));
   if (!consent)
     return (
       <p className="text-sm text-mute">

@@ -95,6 +95,22 @@ export const useSettings = create<SettingsState>()(
   ),
 );
 
+/** The demo patient's name on simulated data (simulation, Wokwi, demo mode), so every screen tells one story. */
+export const DEMO_PATIENT_NAME = 'أبو سعد';
+
+/**
+ * The patient's name as shown: what was typed in Settings, else «أبو سعد» on simulated data, else `fallback`
+ * (the real mat with no name: neutral wording).
+ */
+export function shownPatientName(
+  s: Pick<SettingsState, 'patientName' | 'dataSource' | 'demoMode'>,
+  fallback: string,
+): string {
+  const typed = s.patientName.trim();
+  if (typed) return typed;
+  return s.dataSource !== 'firebase' || s.demoMode ? DEMO_PATIENT_NAME : fallback;
+}
+
 /** Applies ?source= and ?dev= from the URL once at startup. */
 export function applyUrlOverrides(search = typeof location !== 'undefined' ? location.search : '') {
   const q = new URLSearchParams(search);
