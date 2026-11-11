@@ -11,6 +11,7 @@
  * firmware built by firmware/wokwi/build.sh. Usage (in web/):
  *   node scripts/measure-latency.mjs [appUrl]
  */
+/* global window, document, MutationObserver -- used inside page.addInitScript (runs in the browser) */
 import { spawn } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';

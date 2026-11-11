@@ -18,7 +18,7 @@ export function TopBar({
 }) {
   const nav = useNavigate();
   return (
-    <header className="sticky top-0 z-20 border-b border-line bg-surface/95 backdrop-blur print:hidden">
+    <header className="sticky top-[var(--kh-banner-h,0px)] z-20 border-b border-line bg-surface/95 backdrop-blur print:hidden">
       <div className="mx-auto flex h-16 max-w-screen-sm items-center gap-2 px-3">
         {back ? (
           <button

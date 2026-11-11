@@ -21,7 +21,7 @@ export function TourCard({ aboveNav }: { aboveNav: boolean }) {
       className={cn(
         'fixed inset-x-0 z-40 mx-auto max-w-screen-sm px-3 print:hidden',
         cur.top
-          ? 'top-[4.5rem]'
+          ? 'top-[calc(var(--kh-banner-h,0px)+4.5rem)]'
           : aboveNav
             ? 'bottom-[calc(5.25rem+env(safe-area-inset-bottom))]'
             : 'bottom-[calc(0.75rem+env(safe-area-inset-bottom))]',

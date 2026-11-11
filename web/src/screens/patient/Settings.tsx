@@ -33,7 +33,7 @@ function Section({
   children: ReactNode;
 }) {
   return (
-    <Card id={id} className="grid scroll-mt-20 gap-3">
+    <Card id={id} className="grid scroll-mt-[calc(var(--kh-banner-h,0px)+5rem)] gap-3">
       <div>
         <CardTitle>{title}</CardTitle>
         {hint && <CardHint>{hint}</CardHint>}

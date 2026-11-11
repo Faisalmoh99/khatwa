@@ -169,3 +169,14 @@ test('honesty: build status sentence on welcome, device and about; the simulator
   await open(page, '/settings');
   await expect(page.getByTestId('about-build-status')).toContainText(SENTENCE);
 });
+
+test('the source banner stays on screen while scrolling, with the top bar under it', async ({ page }) => {
+  await go(page, '/settings');
+  await page.mouse.wheel(0, 4000);
+  await page.waitForTimeout(300);
+  const banner = await page.getByTestId('banners').boundingBox();
+  const header = await page.locator('header').first().boundingBox();
+  expect(banner!.y).toBe(0);
+  expect(Math.round(header!.y)).toBe(Math.round(banner!.height));
+  await expect(page.getByTestId('source-banner')).toBeInViewport();
+});

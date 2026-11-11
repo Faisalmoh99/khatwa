@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { ConnectionBanner, SourceBanner } from '@/components/kh/Banners';
 import { useTourDriver } from '@/hooks/useTourDriver';
@@ -75,6 +75,33 @@ function ScrollToTop() {
   return null;
 }
 
+/**
+ * The banners stay at the top while the page scrolls, so the data source is always visible.
+ * Their height goes into --kh-banner-h; the sticky top bar sits right under them.
+ */
+function StickyBanners() {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const root = document.documentElement;
+    const set = () => root.style.setProperty('--kh-banner-h', `${el.offsetHeight}px`);
+    set();
+    const ro = new ResizeObserver(set);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      root.style.removeProperty('--kh-banner-h');
+    };
+  }, []);
+  return (
+    <div ref={ref} className="sticky top-0 z-30 print:hidden" data-testid="banners">
+      <SourceBanner />
+      <ConnectionBanner />
+    </div>
+  );
+}
+
 /** Inside the router: the tour navigates between screens. */
 function TourDriver() {
   useTourDriver();
@@ -106,11 +133,8 @@ export function App() {
       <TourDriver />
       <UpdateBanner />
       {splash && <Splash />}
-      {/* Honesty banners on every screen, including the welcome and login screens. */}
-      <div className="print:hidden">
-        <SourceBanner />
-        <ConnectionBanner />
-      </div>
+      {/* Honesty banners on every screen, including the welcome and login screens. Pinned while scrolling. */}
+      <StickyBanners />
       <Suspense fallback={null}>
         <Routes>
           <Route path="/" element={<Gate />} />
