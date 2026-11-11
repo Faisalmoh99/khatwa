@@ -16,3 +16,8 @@ tools/video/clips-log.txt
 tools/video/clips-raw/
 tools/video/tmp-clips/
 tools/video/frame/
+tools/video/allshots-raw/
+tools/video/tmp-sheet/
+tools/video/flow-raw/
+tools/video/tmp-flow/
+tools/video/frame-flow/

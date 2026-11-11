@@ -20,3 +20,17 @@ Clips: real-speed interaction, no cuts inside a flow. The simulated mat runs on 
 - Waiting stretches are sped up and tagged «مسرّع».
 - Netlify's preview toolbar is hidden in the footage (it is not part of the app and does not exist in production).
 - If a stand stalls (the virtual ESP32's requests stop being answered), `film.mjs` restarts the simulation and retries.
+
+## All screens, contact sheet, full-flow video (iPhone-style frame)
+
+```bash
+node tools/video/allscreens.mjs       # every screen, flow order → allshots-raw/ + manifest.json (Arabic names)
+node tools/video/frame-all.mjs        # → deliverables/all-screens/NN-name.png (transparent, 1548x3054)
+node tools/video/sheet.mjs            # → deliverables/khatwa-all-screens.pdf (6 per A4 page)
+node tools/video/flow-frame.mjs       # frame overlay + mask on teal for the video
+node tools/video/fullflow.mjs         # takes: intro, day 1, day 2 + WhatsApp, family, Rafiq, clinic + AI summary
+python3 tools/video/compose_fullflow.py  # → deliverables/khatwa-full-flow.mp4 (crossfades, real speed)
+```
+
+The frame (`iphone.mjs`) is generic: modern shape, Dynamic Island, side buttons, no logo or brand marks. The island sits in a
+status bar strip (generic 9:41 and icons) so it never covers the app's honesty banner.
