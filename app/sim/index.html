@@ -146,7 +146,7 @@ const SCN = {
 const FSR_ON = 1800, FSR_MIN = 600;      // نفس العتبات اللي بنستخدمها في ESP32 (تُعدّل بعد التجربة)
 const STABLE_WIN = 5, STABLE_DELTA = 0.1, MAX_SEC = 90, MIN_SEC = 8;
 
-let timer = null, hbTimer = null, sess = null, loggedIn = false;
+let timer = null, hbTimer = null, sess = null, loggedIn = false, holding = false;
 
 function render(L, R, fsrL, fsrR, elapsed) {
   $('tbody').innerHTML = SITES.map((s, i) => {
@@ -165,6 +165,7 @@ function startScan() {
   const start = scn.wet ? 21.5 : 26.0;    // السجادة تبدأ بحرارة الغرفة، والمبللة أبرد (تبخّر)
   const target = { L: SKIN.slice(), R: SKIN.map((v, i) => v + scn.dR[i]) };
   if (scn.wet) { target.L = target.L.map(v => v - 1.2); target.R = target.R.map(v => v - 1.2); }
+  holding = false;
   sess = { scn, tau, start, target, t: 0, settle: 0, hist: [], moved: false, scnKey: $('scn').value };
   $('start').disabled = true; $('stop').disabled = false;
   log(`بداية فحص: ${$('scn').selectedOptions[0].textContent}`);
@@ -198,8 +199,8 @@ async function tick() {
     if (s.scn.oneFoot || s.t > 12 || !s.scn.move) {
       await writeLive({ phase: 'error', msg: 'قدم وحدة أو القدم مو في مكانها', L: [0, 0, 0, 0], R: [0, 0, 0, 0], fsrL, fsrR, standing: false, progress: 0, elapsedSec: s.t });
       setPhase('error', 'مرفوض: قدم وحدة. ما تسجّلت قراءة', 'bad');
-      log('رفض: حساس ضغط ما انضغط (الجهاز يشغّل الضوء الأحمر). ما فيه scan.');
-      return endScan(false);
+      log('رفض: حساس ضغط ما انضغط (الجهاز يشغّل الضوء الأحمر). ما فيه scan. الخطأ يبقى لين تضغط «انزل من السجادة» (مثل الجهاز).');
+      return endScan(false, true);
     }
     s.settle = Math.max(0, s.settle - 4); s.hist = [];      // حركة: يعاد عدّ الاستقرار
     await writeLive({ phase: 'settling', msg: 'اكتُشفت حركة، اثبت', L: [0, 0, 0, 0], R: [0, 0, 0, 0], fsrL, fsrR, standing: true, progress: 0, elapsedSec: s.t });
@@ -236,9 +237,11 @@ async function tick() {
   }
 }
 
-async function endScan(written) {
+async function endScan(written, hold = false) {
   clearInterval(timer); timer = null; sess = null;
-  $('start').disabled = false; $('stop').disabled = true;
+  $('start').disabled = false; $('stop').disabled = !hold;
+  holding = hold; // like the real mat: the one-foot error stays until the patient steps off
+  if (hold) return;
   setTimeout(async () => { if (!sess) { await writeLive({ phase: 'idle', L: [0, 0, 0, 0], R: [0, 0, 0, 0], fsrL: 0, fsrR: 0, standing: false, progress: 0, elapsedSec: 0 }); if (!written) setPhase('idle', 'ينتظر'); } }, 6000);
 }
 
@@ -288,7 +291,7 @@ async function main() {
 }
 
 $('start').onclick = startScan;
-$('stop').onclick = async () => { log('نزل من السجادة قبل الانتهاء: ما تسجّلت قراءة'); await writeLive({ phase: 'error', msg: 'نزل قبل الانتهاء', L: [0, 0, 0, 0], R: [0, 0, 0, 0], fsrL: 0, fsrR: 0, standing: false, progress: 0, elapsedSec: 0 }); setPhase('error', 'أُلغي', 'warn'); endScan(false); };
+$('stop').onclick = async () => { if (holding) { holding = false; $('stop').disabled = true; log('نزل من السجادة'); await writeLive({ phase: 'idle', L: [0, 0, 0, 0], R: [0, 0, 0, 0], fsrL: 0, fsrR: 0, standing: false, progress: 0, elapsedSec: 0 }); setPhase('idle', 'ينتظر'); return; } log('نزل من السجادة قبل الانتهاء: ما تسجّلت قراءة'); await writeLive({ phase: 'error', msg: 'نزل قبل الانتهاء', L: [0, 0, 0, 0], R: [0, 0, 0, 0], fsrL: 0, fsrR: 0, standing: false, progress: 0, elapsedSec: 0 }); setPhase('error', 'أُلغي', 'warn'); endScan(false); };
 $('hb').onchange = heartbeat;
 $('backfill').onclick = backfill;
 
