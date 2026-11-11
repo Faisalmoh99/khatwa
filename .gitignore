@@ -11,3 +11,8 @@ deliverables/
 tools/video/raw/
 tools/video/tmp/
 tools/video/cards/
+tools/video/film-log.txt
+tools/video/clips-log.txt
+tools/video/clips-raw/
+tools/video/tmp-clips/
+tools/video/frame/

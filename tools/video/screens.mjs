@@ -43,6 +43,10 @@ await p.evaluate(() => {
   Object.assign(s.state, { patientName: 'أبو سعد', familyName: 'سعد', patientPhone: '0551234567' });
   localStorage.setItem('kh.settings', JSON.stringify(s));
 });
+// Same story as the video: 28 normal days, then the same point hot two days in a row (yellow, then orange).
+await p.goto(`${APP}/settings?nosplash=1`);
+await p.locator('select').filter({ has: p.locator('option[value="twodays"]') }).selectOption('twodays');
+await p.getByTestId('sim-load-days').click();
 await p.goto(`${APP}/home?nosplash=1`);
 await p.getByTestId('today-hero').waitFor();
 await shot('1-patient-home');

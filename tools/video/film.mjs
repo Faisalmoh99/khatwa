@@ -85,16 +85,45 @@ async function filmWokwi() {
   const stopA = await record(app, 'app-wokwi');
   await sleep(2500);
   const pots = async (key) => {
-    for (const [x, y] of [
-      [885, 570],
-      [1252, 570],
-    ]) {
+    const centers = await w.evaluate(() =>
+      [...document.querySelectorAll('wokwi-potentiometer')].map((e) => {
+        const r = e.getBoundingClientRect();
+        return [r.x + r.width / 2, r.y + r.height / 2];
+      }),
+    );
+    for (const [x, y] of centers) {
       await w.mouse.click(x, y);
       await sleep(300);
       await w.keyboard.press(key);
       await sleep(600);
     }
   };
+  // Zoom the Wokwi canvas in/out around the heated sensor (R MTH1), and enlarge its temperature popup.
+  const ZOOM_AT = [1268, 420];
+  const zoom = async (dir) => {
+    await w.mouse.move(...ZOOM_AT);
+    for (let i = 0; i < 8; i++) await (w.mouse.wheel(0, dir * 100), sleep(110));
+    await sleep(500);
+  };
+  const bigPopup = () =>
+    w.evaluate(() => {
+      const r = document.querySelector('input[type=range]');
+      let el = r;
+      // the popup panel: the nearest ancestor that also holds the sensor title
+      while (el && !el.textContent.includes('DS18B20')) el = el.parentElement;
+      if (el) {
+        el.style.zoom = '1.75';
+        return true;
+      }
+      return false;
+    });
+  const setTemp = (val) =>
+    w.evaluate((v) => {
+      const r = document.querySelector('input[type=range]');
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(r, v.toFixed(1));
+      r.dispatchEvent(new Event('input', { bubbles: true }));
+      r.dispatchEvent(new Event('change', { bubbles: true }));
+    }, val);
   const authCount = () => w.evaluate(() => document.body.innerText.split('# auth: ready').length - 1);
   // After a stall (the virtual ESP32's requests stop being answered), restart the simulation and wait for sign-in.
   const restart = async () => {
@@ -119,20 +148,20 @@ async function filmWokwi() {
   for (let attempt = 1; ; attempt++) {
     if (attempt > 3) throw new Error('stand 1 failed 3 times');
     mark('s2_start');
-    await w.mouse.click(1268, 403);
-    await sleep(1200);
+    await zoom(-1);
+    // R MTH1 after zooming around ZOOM_AT
+    await w.mouse.click(1268, 397);
+    await sleep(500);
+    if (!(await w.locator('input[type=range]').count())) throw new Error('sensor popup did not open');
+    console.log('popup enlarged:', await bigPopup());
+    await sleep(1000);
     mark('s2_slider');
     for (let v = 30.7; v <= 33.31; v += 0.1) {
-      await w.evaluate((val) => {
-        const r = document.querySelector('input[type=range]');
-        const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
-        set.call(r, val.toFixed(1));
-        r.dispatchEvent(new Event('input', { bubbles: true }));
-        r.dispatchEvent(new Event('change', { bubbles: true }));
-      }, v);
-      await sleep(60);
+      await setTemp(v);
+      await sleep(110);
     }
-    await sleep(1200);
+    await sleep(1500);
+    await zoom(1);
     mark('s2_pots');
     await pots('End');
     mark('s2_standing');
@@ -170,12 +199,7 @@ async function filmWokwi() {
     // a restart resets the sensor to 30.7: set R MTH1 again
     await w.mouse.click(1268, 403);
     await sleep(800);
-    await w.evaluate(() => {
-      const r = document.querySelector('input[type=range]');
-      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(r, '33.3');
-      r.dispatchEvent(new Event('input', { bubbles: true }));
-      r.dispatchEvent(new Event('change', { bubbles: true }));
-    });
+    await setTemp(33.3);
     await sleep(800);
   }
   mark('s3_scan2_shown');
@@ -246,12 +270,11 @@ async function filmSim() {
   await sleep(700);
   mark('s5_send');
   await p.getByRole('button', { name: 'أرسل' }).click();
-  await sleep(4000);
-  await p.getByTestId('chat').locator('li').last().scrollIntoViewIfNeeded();
-  await sleep(2500);
+  await p.getByTestId('chat').locator('li').last().filter({ hasText: 'العيادة' }).waitFor({ timeout: 20_000 });
+  await sleep(1300); // smooth scroll settles above the input bar
   mark('s5_red');
-  await p.goto(`${APP}/home?nosplash=1`);
-  await sleep(3000);
+  await sleep(4000); // red reply held, fully visible
+  mark('s5_end');
 
   // Scene 6: clinic list, then the report with QR.
   mark('s6_start');

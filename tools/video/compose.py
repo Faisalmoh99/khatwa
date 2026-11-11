@@ -107,9 +107,11 @@ def card(name, secs):
 
 
 s2 = scene("s2", [
-    ("app-wokwi", M["s2_start"], M["s2_standing"] + 1.0, 1.0),
-    ("app-wokwi", M["s2_standing"] + 1.0, M["s2_scan_shown"] - 1.5, None),
-    ("app-wokwi", M["s2_scan_shown"] - 1.5, M["s2_result"] + 2.0, 1.0),
+    # zoom in, open the sensor, temperature rises: real speed so the number is readable
+    ("app-wokwi", M["s2_start"], M["s2_slider"] + 4.0, 1.0),
+    # zoom out, heels down, measuring: sped up (tagged)
+    ("app-wokwi", M["s2_slider"] + 4.0, M["s2_scan_shown"] - 1.0, None),
+    ("app-wokwi", M["s2_scan_shown"] - 1.0, M["s2_result"] + 1.8, 1.0),
 ], 17, "s2", "split")
 s3 = scene("s3", [
     ("app-wokwi", M["s3_day1"], M["s3_day1"] + 3.0, 1.0),
@@ -117,7 +119,7 @@ s3 = scene("s3", [
     ("app-wokwi", M["s3_scan2_shown"] - 0.5, M["s3_end"], 1.0),
 ], 15, "s3", "full")
 s4 = scene("s4", [("app-sim", M["s4_start"], M["s5_start"], None)], 10, "s4", "full")
-s5 = scene("s5", [("app-sim", M["s5_start"], M["s6_start"], None)], 15, "s5", "full")
+s5 = scene("s5", [("app-sim", M["s5_start"], M["s5_red"], None), ("app-sim", M["s5_red"], M["s5_end"], 1.0)], 15, "s5", "full")
 s6 = scene("s6", [("app-sim", M["s6_start"], M["s6_end"], None)], 15, "s6", "full")
 c1, c7 = card("card1", 8), card("card7", 10)
 
