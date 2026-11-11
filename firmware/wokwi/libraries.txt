@@ -1,0 +1,4 @@
+# Wokwi web editor: same libraries as the real mat
+OneWire
+DallasTemperature
+FirebaseClient

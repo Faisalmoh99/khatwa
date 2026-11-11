@@ -1,0 +1,556 @@
+{
+  "version": 1,
+  "author": "Khatwa team",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-esp32-devkit-c-v4",
+      "id": "esp",
+      "top": 0,
+      "left": 0,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "pullL",
+      "top": -130,
+      "left": -310,
+      "rotate": 0,
+      "attrs": {
+        "value": "4700"
+      }
+    },
+    {
+      "type": "wokwi-ds18b20",
+      "id": "tL0",
+      "top": -80,
+      "left": -430,
+      "attrs": {
+        "deviceID": "000000000000",
+        "temperature": "30.0"
+      }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "lbltL0",
+      "top": 10,
+      "left": -435,
+      "attrs": {
+        "text": "L hallux"
+      }
+    },
+    {
+      "type": "wokwi-ds18b20",
+      "id": "tL1",
+      "top": -80,
+      "left": -350,
+      "attrs": {
+        "deviceID": "808080808080",
+        "temperature": "30.6"
+      }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "lbltL1",
+      "top": 10,
+      "left": -355,
+      "attrs": {
+        "text": "L MTH1"
+      }
+    },
+    {
+      "type": "wokwi-ds18b20",
+      "id": "tL2",
+      "top": -80,
+      "left": -270,
+      "attrs": {
+        "deviceID": "404040404040",
+        "temperature": "30.3"
+      }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "lbltL2",
+      "top": 10,
+      "left": -275,
+      "attrs": {
+        "text": "L MTH5"
+      }
+    },
+    {
+      "type": "wokwi-ds18b20",
+      "id": "tL3",
+      "top": -80,
+      "left": -190,
+      "attrs": {
+        "deviceID": "C0C0C0C0C0C0",
+        "temperature": "29.8"
+      }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "lbltL3",
+      "top": 10,
+      "left": -195,
+      "attrs": {
+        "text": "L heel"
+      }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "titleL",
+      "top": -120,
+      "left": -430,
+      "attrs": {
+        "text": "LEFT foot (GPIO 4)"
+      }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "pullR",
+      "top": -130,
+      "left": 450,
+      "rotate": 0,
+      "attrs": {
+        "value": "4700"
+      }
+    },
+    {
+      "type": "wokwi-ds18b20",
+      "id": "tR0",
+      "top": -80,
+      "left": 330,
+      "attrs": {
+        "deviceID": "000000000000",
+        "temperature": "30.1"
+      }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "lbltR0",
+      "top": 10,
+      "left": 325,
+      "attrs": {
+        "text": "R hallux"
+      }
+    },
+    {
+      "type": "wokwi-ds18b20",
+      "id": "tR1",
+      "top": -80,
+      "left": 410,
+      "attrs": {
+        "deviceID": "808080808080",
+        "temperature": "30.700000000000003"
+      }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "lbltR1",
+      "top": 10,
+      "left": 405,
+      "attrs": {
+        "text": "R MTH1"
+      }
+    },
+    {
+      "type": "wokwi-ds18b20",
+      "id": "tR2",
+      "top": -80,
+      "left": 490,
+      "attrs": {
+        "deviceID": "404040404040",
+        "temperature": "30.400000000000002"
+      }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "lbltR2",
+      "top": 10,
+      "left": 485,
+      "attrs": {
+        "text": "R MTH5"
+      }
+    },
+    {
+      "type": "wokwi-ds18b20",
+      "id": "tR3",
+      "top": -80,
+      "left": 570,
+      "attrs": {
+        "deviceID": "C0C0C0C0C0C0",
+        "temperature": "29.900000000000002"
+      }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "lbltR3",
+      "top": 10,
+      "left": 565,
+      "attrs": {
+        "text": "R heel"
+      }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "titleR",
+      "top": -120,
+      "left": 330,
+      "attrs": {
+        "text": "RIGHT foot (GPIO 18)"
+      }
+    },
+    {
+      "type": "wokwi-potentiometer",
+      "id": "fsrL",
+      "top": 200,
+      "left": -300,
+      "attrs": {
+        "value": "0"
+      }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "lblfsrL",
+      "top": 290,
+      "left": -360,
+      "attrs": {
+        "text": "left heel pressure (FSR stand-in)"
+      }
+    },
+    {
+      "type": "wokwi-potentiometer",
+      "id": "fsrR",
+      "top": 200,
+      "left": 360,
+      "attrs": {
+        "value": "0"
+      }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "lblfsrR",
+      "top": 290,
+      "left": 300,
+      "attrs": {
+        "text": "right heel pressure (FSR stand-in)"
+      }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "ledG",
+      "top": -10,
+      "left": 200,
+      "attrs": {
+        "color": "green",
+        "label": "25"
+      }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "ledR",
+      "top": -10,
+      "left": 240,
+      "attrs": {
+        "color": "red",
+        "label": "26"
+      }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "rG",
+      "top": 80,
+      "left": 190,
+      "rotate": 90,
+      "attrs": {
+        "value": "220"
+      }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "rR",
+      "top": 80,
+      "left": 230,
+      "rotate": 90,
+      "attrs": {
+        "value": "220"
+      }
+    },
+    {
+      "type": "wokwi-buzzer",
+      "id": "buzz",
+      "top": 120,
+      "left": 280,
+      "attrs": {
+        "volume": "0.1"
+      }
+    }
+  ],
+  "connections": [
+    [
+      "esp:TX",
+      "$serialMonitor:RX",
+      "",
+      []
+    ],
+    [
+      "esp:RX",
+      "$serialMonitor:TX",
+      "",
+      []
+    ],
+    [
+      "pullL:1",
+      "esp:3V3",
+      "red",
+      []
+    ],
+    [
+      "pullL:2",
+      "esp:4",
+      "blue",
+      []
+    ],
+    [
+      "tL0:DQ",
+      "esp:4",
+      "blue",
+      []
+    ],
+    [
+      "tL0:VCC",
+      "esp:3V3",
+      "red",
+      []
+    ],
+    [
+      "tL0:GND",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "tL1:DQ",
+      "esp:4",
+      "blue",
+      []
+    ],
+    [
+      "tL1:VCC",
+      "esp:3V3",
+      "red",
+      []
+    ],
+    [
+      "tL1:GND",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "tL2:DQ",
+      "esp:4",
+      "blue",
+      []
+    ],
+    [
+      "tL2:VCC",
+      "esp:3V3",
+      "red",
+      []
+    ],
+    [
+      "tL2:GND",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "tL3:DQ",
+      "esp:4",
+      "blue",
+      []
+    ],
+    [
+      "tL3:VCC",
+      "esp:3V3",
+      "red",
+      []
+    ],
+    [
+      "tL3:GND",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "pullR:1",
+      "esp:3V3",
+      "red",
+      []
+    ],
+    [
+      "pullR:2",
+      "esp:18",
+      "orange",
+      []
+    ],
+    [
+      "tR0:DQ",
+      "esp:18",
+      "orange",
+      []
+    ],
+    [
+      "tR0:VCC",
+      "esp:3V3",
+      "red",
+      []
+    ],
+    [
+      "tR0:GND",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "tR1:DQ",
+      "esp:18",
+      "orange",
+      []
+    ],
+    [
+      "tR1:VCC",
+      "esp:3V3",
+      "red",
+      []
+    ],
+    [
+      "tR1:GND",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "tR2:DQ",
+      "esp:18",
+      "orange",
+      []
+    ],
+    [
+      "tR2:VCC",
+      "esp:3V3",
+      "red",
+      []
+    ],
+    [
+      "tR2:GND",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "tR3:DQ",
+      "esp:18",
+      "orange",
+      []
+    ],
+    [
+      "tR3:VCC",
+      "esp:3V3",
+      "red",
+      []
+    ],
+    [
+      "tR3:GND",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "fsrL:SIG",
+      "esp:34",
+      "green",
+      []
+    ],
+    [
+      "fsrL:VCC",
+      "esp:3V3",
+      "red",
+      []
+    ],
+    [
+      "fsrL:GND",
+      "esp:GND.2",
+      "black",
+      []
+    ],
+    [
+      "fsrR:SIG",
+      "esp:35",
+      "green",
+      []
+    ],
+    [
+      "fsrR:VCC",
+      "esp:3V3",
+      "red",
+      []
+    ],
+    [
+      "fsrR:GND",
+      "esp:GND.2",
+      "black",
+      []
+    ],
+    [
+      "esp:25",
+      "ledG:A",
+      "green",
+      []
+    ],
+    [
+      "ledG:C",
+      "rG:1",
+      "black",
+      []
+    ],
+    [
+      "rG:2",
+      "esp:GND.3",
+      "black",
+      []
+    ],
+    [
+      "esp:26",
+      "ledR:A",
+      "red",
+      []
+    ],
+    [
+      "ledR:C",
+      "rR:1",
+      "black",
+      []
+    ],
+    [
+      "rR:2",
+      "esp:GND.3",
+      "black",
+      []
+    ],
+    [
+      "esp:27",
+      "buzz:2",
+      "purple",
+      []
+    ],
+    [
+      "buzz:1",
+      "esp:GND.3",
+      "black",
+      []
+    ]
+  ],
+  "dependencies": {}
+}
