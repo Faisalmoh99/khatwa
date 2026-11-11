@@ -115,7 +115,7 @@ export function Assistant() {
     <AppShell
       title="رفيق"
       nav={PATIENT_NAV}
-      className="pb-56"
+      className="pb-64"
       end={
         <button
           type="button"
@@ -132,7 +132,7 @@ export function Assistant() {
       <p className="text-center text-sm text-mute">
         رفيق يرد بردود مكتوبة مسبقًا. ما يشخّص ولا يصف دواء، ويبلّغ العيادة إذا احتجت.
       </p>
-      <ol ref={listRef} className="grid gap-3" aria-live="polite" data-testid="chat">
+      <ol ref={listRef} className="grid gap-3 [&>li]:scroll-mb-64" aria-live="polite" data-testid="chat">
         {msgs.map((m, i) =>
           m.who === 'bot' ? (
             <li key={i} className="flex items-end gap-2">
@@ -168,7 +168,7 @@ export function Assistant() {
         )}
       </ol>
 
-      <div className="fixed inset-x-0 bottom-[calc(60px+env(safe-area-inset-bottom))] z-20 border-t border-line bg-bg/95 backdrop-blur">
+      <div className="fixed inset-x-0 bottom-[calc(60px+env(safe-area-inset-bottom))] z-20 border-t border-line bg-bg">
         <div className="mx-auto grid max-w-screen-sm gap-2 px-4 py-3">
           {lastBot && lastBot.replies.length > 0 && (
             <div className="flex max-h-[112px] flex-wrap gap-2 overflow-y-auto" data-testid="quick-replies">

@@ -44,6 +44,8 @@ export function Report() {
   const { id } = useParams();
   const p = usePatient(id ?? REAL_ID);
   const deviceId = useSettings((s) => s.deviceId);
+  // Simulated data never shows a device id as if it were the real mat (honesty rule).
+  const kind = useSettings((s) => s.dataSource);
   const r = useMemo(() => (p ? buildReport(p) : null), [p]);
   const [qr, setQr] = useState('');
   const [summary, setSummary] = useState<string | null>(null);
@@ -102,8 +104,19 @@ export function Report() {
                 {r.name}
               </span>
               {!r.virtual && (
-                <span className="rounded-full bg-bg px-2 py-0.5 text-sm text-ink-2">
-                  الجهاز <span className="num">{deviceId}</span>
+                <span
+                  className="rounded-full bg-bg px-2 py-0.5 text-sm text-ink-2"
+                  data-testid="report-device"
+                >
+                  {kind === 'simulation' ? (
+                    'جهاز محاكاة'
+                  ) : kind === 'wokwi' ? (
+                    'السجادة الافتراضية (Wokwi)'
+                  ) : (
+                    <>
+                      الجهاز <span className="num">{deviceId}</span>
+                    </>
+                  )}
                 </span>
               )}
               {r.simulated && (

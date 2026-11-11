@@ -82,6 +82,14 @@ export const DAYS_SCENARIOS: DaysScenario[] = [
     missing: [],
   },
   {
+    id: 'twodays',
+    ar: 'سخنت يومين ورا بعض',
+    desc: 'رأس المشط الأول في القدم اليمنى أسخن أمس واليوم فقط: أمس أصفر، واليوم برتقالي.',
+    seed: 23,
+    hot: (d) => (d >= 29 ? [{ foot: 'R', site: 1, add: 2.8 }] : []),
+    missing: [],
+  },
+  {
     id: 'transient',
     ar: 'قراءة عابرة',
     desc: 'كعب القدم اليمنى يسخن يومًا واحدًا بعد مشي طويل ثم يهدأ.',

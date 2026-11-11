@@ -95,6 +95,20 @@ describe('SimulationSource history and events', () => {
     expect(evaluate(buildDays(scans)).some((d) => d.level === 'orange')).toBe(true);
   });
 
+  test('two-day scenario: green for 28 days, yellow yesterday, orange today (same point, consecutive)', () => {
+    vi.setSystemTime(Date.UTC(2026, 10, 8, 12));
+    const src = new SimulationSource('test', { storage: null });
+    let scans: Scan[] = [];
+    void src.start();
+    src.subscribeScans((s) => (scans = s));
+    src.loadDays('twodays');
+    const days = evaluate(buildDays(scans));
+    expect(days).toHaveLength(30);
+    expect(days.slice(0, 28).every((d) => d.level === 'green')).toBe(true);
+    expect(days.at(-2)!.level).toBe('yellow');
+    expect(days.at(-1)!.level).toBe('orange');
+  });
+
   test('dropoff scenario has 15 days', () => {
     vi.setSystemTime(Date.UTC(2026, 10, 8, 12));
     const src = new SimulationSource('test', { storage: null });

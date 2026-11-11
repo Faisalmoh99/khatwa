@@ -180,3 +180,33 @@ test('the source banner stays on screen while scrolling, with the top bar under 
   expect(Math.round(header!.y)).toBe(Math.round(banner!.height));
   await expect(page.getByTestId('source-banner')).toBeInViewport();
 });
+
+test('report on simulated data says «جهاز محاكاة», never a device id', async ({ page }) => {
+  await go(page, '/report');
+  await expect(page.getByTestId('report-device')).toHaveText('جهاز محاكاة');
+  await expect(page.getByTestId('report')).not.toContainText('khatwa-01');
+});
+
+test('Rafiq: the red reply ends up above the input bar, fully visible', async ({ page }) => {
+  await go(page, '/assistant');
+  await page.getByRole('textbox').fill('رجلي متورمة وفيها شي ينز');
+  await page.getByRole('button', { name: 'أرسل' }).click();
+  const last = page.getByTestId('chat').locator('li').last();
+  await expect(last).toContainText('العيادة');
+  await page.waitForTimeout(1200); // smooth scroll
+  const msg = (await last.boundingBox())!;
+  const bar = (await page.getByRole('textbox').boundingBox())!;
+  const replies = await page.getByTestId('quick-replies').boundingBox();
+  const barTop = Math.min(bar.y, replies?.y ?? bar.y);
+  expect(msg.y).toBeGreaterThanOrEqual(0);
+  expect(msg.y + msg.height).toBeLessThanOrEqual(barTop);
+});
+
+test('bottom navigation is opaque (page text never shows through it)', async ({ page }) => {
+  await go(page, '/home');
+  const bg = await page
+    .locator('nav')
+    .last()
+    .evaluate((e) => getComputedStyle(e).backgroundColor);
+  expect(bg).toMatch(/^rgb\(/); // rgb(...) = no alpha; rgba(..., 0.95) was see-through
+});
