@@ -1,7 +1,7 @@
 import { ChevronRight, Settings } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ConnectionBanner, SourceBanner } from '@/components/kh/Banners';
+import { TourCard, TourSpacer } from '@/components/kh/TourCard';
 import { cn } from '@/lib/cn';
 import { BottomNav, type NavItem } from './BottomNav';
 
@@ -70,10 +70,6 @@ export function AppShell({
 }) {
   return (
     <div className="min-h-dvh">
-      <div className="print:hidden">
-        <SourceBanner />
-        <ConnectionBanner />
-      </div>
       <TopBar title={title} back={back} end={end} settings={settings} />
       <main
         className={cn(
@@ -83,7 +79,9 @@ export function AppShell({
         )}
       >
         {children}
+        <TourSpacer />
       </main>
+      <TourCard aboveNav={!!nav} />
       {nav && <BottomNav items={nav} />}
     </div>
   );

@@ -1,4 +1,5 @@
 import { CalendarCheck } from 'lucide-react';
+import { writeErrorAr } from '@/data/DataSource';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { EventList } from '@/components/kh/EventList';
@@ -51,8 +52,8 @@ export function Booking() {
         day: today.key,
       });
       setDone(true);
-    } catch {
-      setErr('ما قدرنا نرسل الطلب. تأكد من الإنترنت.');
+    } catch (e) {
+      setErr(writeErrorAr(e, 'ما قدرنا نرسل الطلب. تأكد من الإنترنت.'));
     }
   };
 

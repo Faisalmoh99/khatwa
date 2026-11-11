@@ -1,10 +1,12 @@
-import { Building2, Droplets, Footprints, HeartHandshake, User } from 'lucide-react';
+import { Building2, Droplets, Footprints, HeartHandshake, PlayCircle, User } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FootMap } from '@/components/kh/FootMap';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/cn';
+import { BUILD_STATUS_AR } from '@/lib/words';
 import { useSettings } from '@/store/settings';
+import { startTour } from '@/store/tour';
 
 interface Slide {
   title: string;
@@ -39,7 +41,7 @@ function Bubble({
 const SLIDES: Slide[] = [
   {
     title: 'وش خطوة؟',
-    body: 'سجادة عند مكان الوضوء تقيس حرارة 4 نقاط في كل قدم وتقارن القدمين ببعض. إذا صار فرق واضح يومين ورا بعض، ننبّهك بدري.',
+    body: `سجادة عند مكان الوضوء تقارن حرارة القدمين ببعض. إذا صار فرق واضح يومين ورا بعض، ننبّهك بدري. ${BUILD_STATUS_AR}.`,
     art: <FootMap compact showValues={false} highlight={{ L: [], R: [1] }} />,
   },
   {
@@ -125,6 +127,9 @@ export function Onboarding() {
         </div>
         <Button size="lg" block onClick={() => (last ? finish() : setI(i + 1))} data-testid="onb-next">
           {last ? 'يلا نبدأ' : 'التالي'}
+        </Button>
+        <Button size="lg" block variant="soft" onClick={startTour} data-testid="onb-tour">
+          <PlayCircle /> جرّب السيناريو بدون تسجيل
         </Button>
       </div>
     </div>

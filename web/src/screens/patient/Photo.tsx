@@ -1,4 +1,5 @@
 import { Camera, ImageOff, Sparkles } from 'lucide-react';
+import { writeErrorAr } from '@/data/DataSource';
 import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FootMap } from '@/components/kh/FootMap';
@@ -92,8 +93,8 @@ export function Photo() {
         day: today.key,
       }).catch(() => {});
       setMsg({ ok: true, text: 'انحفظت الصورة للعيادة.' });
-    } catch {
-      setMsg({ ok: false, text: 'ما قدرنا نحفظ الصورة. جرّب مرة ثانية.' });
+    } catch (e) {
+      setMsg({ ok: false, text: writeErrorAr(e, 'ما قدرنا نحفظ الصورة. جرّب مرة ثانية.') });
     } finally {
       setBusy(false);
       if (fileRef.current) fileRef.current.value = '';

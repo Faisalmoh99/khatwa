@@ -5,8 +5,9 @@ import { shot } from './helpers';
  * Acceptance against the real Firebase project (needs internet).
  * Run: E2E_FIREBASE=1 E2E_DEVICE_PASSWORD=… npx playwright test   (password never stored in the repo)
  * 1) The legacy /sim/ writes like the ESP32 and the new app shows it live → result.
- *    Writes one simulated scan (source "sim") to devices/khatwa-01, as the simulator always has.
- * 2) A quick-check event round-trips through Firebase, on a separate test device (khatwa-e2e).
+ *    Writes one simulated scan (source "sim") to devices/khatwa-test (khatwa-01 is kept clean for the demo).
+ * 2) A quick-check event round-trips through Firebase, on a separate test device (khatwa-e2e),
+ *    with «هذا جوال المريض» on (?writes=1): without it nothing is written.
  */
 test('@firebase legacy /sim/ → Firebase → new app (live, then result)', async ({ browser }) => {
   test.skip(
@@ -18,8 +19,8 @@ test('@firebase legacy /sim/ → Firebase → new app (live, then result)', asyn
   const app = await ctx.newPage();
   const sim = await ctx.newPage();
 
-  await app.goto('/scan?source=firebase&as=patient&nosplash=1&dev=khatwa-01');
-  await sim.goto('/sim/');
+  await app.goto('/scan?source=firebase&as=patient&nosplash=1&dev=khatwa-test');
+  await sim.goto('/sim/?dev=khatwa-test');
   if (process.env.E2E_DEVICE_EMAIL) await sim.locator('#devEmail').fill(process.env.E2E_DEVICE_EMAIL);
   await sim.locator('#devPass').fill(process.env.E2E_DEVICE_PASSWORD!);
   await sim.locator('#loginBtn').click();
@@ -38,7 +39,7 @@ test('@firebase legacy /sim/ → Firebase → new app (live, then result)', asyn
 
 test('@firebase quick-check event is written to Firebase and read back', async ({ page }) => {
   test.setTimeout(60_000);
-  await page.goto('/quick?source=firebase&as=patient&nosplash=1&dev=khatwa-e2e');
+  await page.goto('/quick?source=firebase&as=patient&nosplash=1&dev=khatwa-e2e&writes=1');
   await page.getByTestId('quick-skin-wound').click();
   await page.getByTestId('quick-pain-ok').click();
   await page.getByTestId('quick-care-done').click();

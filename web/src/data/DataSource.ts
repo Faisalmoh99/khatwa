@@ -1,6 +1,27 @@
 import type { DeviceStatus, KhEvent, Live, NewEvent, NewPhoto, Photo, Scan } from './types';
 
-export type SourceKind = 'firebase' | 'simulation' | 'serial';
+export type SourceKind = 'firebase' | 'simulation' | 'serial' | 'wokwi';
+
+/** Device id the virtual mat (real firmware running in the Wokwi simulator) writes to. */
+export const WOKWI_DEVICE_ID = 'khatwa-demo';
+
+/** Thrown by a write when this phone is not allowed to write (read-only viewer). */
+export class ReadOnlyError extends Error {
+  constructor() {
+    super('read-only');
+    this.name = 'ReadOnlyError';
+  }
+}
+
+/** Arabic message for a failed write: read-only viewers get told why, everyone else gets the network hint. */
+export function writeErrorAr(
+  e: unknown,
+  network = 'ما قدرنا نحفظ. تأكد من الإنترنت وجرّب مرة ثانية.',
+): string {
+  return e instanceof ReadOnlyError
+    ? 'للمشاهدة فقط: ما نحفظ شي من هذا الجوال. فعّل «هذا جوال المريض» من الإعدادات.'
+    : network;
+}
 export type Unsubscribe = () => void;
 
 export interface ConnectionState {
@@ -26,6 +47,8 @@ export interface RejectedRecord {
 export interface DataSource {
   readonly kind: SourceKind;
   readonly deviceId: string;
+  /** False when writes would be refused (read-only viewer of the real mat, or the Wokwi mat). */
+  readonly writable: boolean;
   start(): Promise<void>;
   stop(): void;
   subscribeConnection(cb: (c: ConnectionState) => void): Unsubscribe;

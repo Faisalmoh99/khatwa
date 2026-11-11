@@ -33,6 +33,8 @@ export function parseSerialLine(line: string) {
 
 export class SerialSource implements DataSource {
   readonly kind = 'serial' as const;
+  /** Local only (this browser / this cable): nothing reaches Firebase. */
+  readonly writable = true;
   private conn = new Channel<ConnectionState>();
   private status = new Channel<{ status: DeviceStatus | null; online: boolean }>();
   private live = new Channel<Live | null>();

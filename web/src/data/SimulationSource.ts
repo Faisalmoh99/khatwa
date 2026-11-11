@@ -45,6 +45,8 @@ export interface SimOptions {
 
 export class SimulationSource implements DataSource {
   readonly kind = 'simulation' as const;
+  /** Local only (this browser / this cable): nothing reaches Firebase. */
+  readonly writable = true;
   private conn = new Channel<ConnectionState>();
   private status = new Channel<{ status: DeviceStatus | null; online: boolean }>();
   private live = new Channel<Live | null>();
@@ -172,6 +174,11 @@ export class SimulationSource implements DataSource {
     if (this.sess) return;
     if (this.idleTimer) clearTimeout(this.idleTimer);
     this.setLive(idle());
+  }
+
+  /** No scans and no events stored yet (a first visit). */
+  get empty() {
+    return this.scans.length === 0 && this.events.length === 0;
   }
 
   /** Replaces the history with a 30-day scenario (every scan is marked backfill + scenario). */

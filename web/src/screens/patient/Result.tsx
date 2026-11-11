@@ -110,7 +110,7 @@ export function Result() {
         )}
         <Button variant="soft" size="lg" asChild>
           <Link to="/assistant">
-            <MessageCircle /> اسأل المساعد
+            <MessageCircle /> اسأل رفيق
           </Link>
         </Button>
       </div>

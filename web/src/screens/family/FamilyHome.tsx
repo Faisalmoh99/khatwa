@@ -1,4 +1,5 @@
 import { CheckCheck, MessageCircleMore, Phone } from 'lucide-react';
+import { writeErrorAr } from '@/data/DataSource';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { EventList } from '@/components/kh/EventList';
@@ -8,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHint, CardTitle } from '@/components/ui/card';
 import { ladderText } from '@/lib/ladder';
 import { ago } from '@/lib/format';
-import { familyEmptyText } from '@/lib/words';
+import { familyEmptyText, matStatusAr } from '@/lib/words';
 import { telLink, whatsappLink } from '@/lib/whatsapp';
 import { serverNow, useDevice, writeEvent } from '@/store/device';
 import { useRealPatient } from '@/store/patients';
@@ -18,8 +19,10 @@ import { useSettings } from '@/store/settings';
 export function FamilyHome() {
   const p = useRealPatient();
   const online = useDevice((s) => s.online);
+  const kind = useSettings((s) => s.dataSource);
   const phone = useSettings((s) => s.patientPhone);
   const [acked, setAcked] = useState(false);
+  const [ackErr, setAckErr] = useState('');
   const last = p.scans.at(-1);
   const alerts = [...p.events]
     .reverse()
@@ -43,7 +46,7 @@ export function FamilyHome() {
       <Card className="grid gap-1">
         <p className="text-base text-ink">{ladderText(p.ladder, 'other')}</p>
         <p className="text-sm text-mute">
-          آخر قياس: {last ? ago(serverNow() - last.ts) : 'ما فيه'} · السجادة {online ? 'متصلة' : 'غير متصلة'}
+          آخر قياس: {last ? ago(serverNow() - last.ts) : 'ما فيه'} · {matStatusAr(kind, online)}
         </p>
       </Card>
 
@@ -71,11 +74,21 @@ export function FamilyHome() {
         size="lg"
         variant="secondary"
         disabled={acked}
-        onClick={() => void writeEvent({ kind: 'family_ack', data: {} }).then(() => setAcked(true))}
+        onClick={() =>
+          void writeEvent({ kind: 'family_ack', data: {} }).then(
+            () => (setAcked(true), setAckErr('')),
+            (e: unknown) => setAckErr(writeErrorAr(e)),
+          )
+        }
         data-testid="family-ack"
       >
         <CheckCheck /> {acked ? 'سجّلنا إنك تواصلت معه' : 'تواصلت معه'}
       </Button>
+      {ackErr && (
+        <p className="text-base font-semibold text-lv-red-ink" role="alert" data-testid="ack-error">
+          {ackErr}
+        </p>
+      )}
 
       <Card className="grid gap-2">
         <CardTitle>التنبيهات</CardTitle>

@@ -1,4 +1,5 @@
 import { CheckCheck, FileText } from 'lucide-react';
+import { writeErrorAr } from '@/data/DataSource';
 import { useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { EventList } from '@/components/kh/EventList';
@@ -10,14 +11,18 @@ import { AppShell } from '@/components/layout/AppShell';
 import { Button } from '@/components/ui/button';
 import { Card, CardHint, CardTitle } from '@/components/ui/card';
 import { dayLabel } from '@/lib/format';
+import { ownPatientTag } from '@/lib/words';
+import { useSettings } from '@/store/settings';
 import { baseline, SITES } from '@/lib/rules/rules';
 import { writeEvent } from '@/store/device';
 import { REAL_ID, usePatient } from '@/store/patients';
 
 export function PatientDetail() {
+  const kind = useSettings((s) => s.dataSource);
   const { id } = useParams();
   const p = usePatient(id);
   const [acked, setAcked] = useState(false);
+  const [ackErr, setAckErr] = useState('');
   if (!p) return <Navigate to="/clinic" replace />;
   const base = baseline(p.days);
   const valid = p.days.filter((d) => d.valid).slice(-30);
@@ -34,7 +39,7 @@ export function PatientDetail() {
           }
           data-testid="patient-kind"
         >
-          {p.virtual ? 'مريض افتراضي، بيانات محاكاة' : 'الجهاز الحقيقي'}
+          {p.virtual ? 'مريض افتراضي، بيانات محاكاة' : ownPatientTag(kind)}
         </span>
         {p.age && (
           <span className="text-sm text-mute">
@@ -81,8 +86,9 @@ export function PatientDetail() {
             variant="secondary"
             disabled={acked}
             onClick={() =>
-              void writeEvent({ kind: 'clinic_ack', data: { note: 'اطّلعت العيادة على الحالة' } }).then(() =>
-                setAcked(true),
+              void writeEvent({ kind: 'clinic_ack', data: { note: 'اطّلعت العيادة على الحالة' } }).then(
+                () => (setAcked(true), setAckErr('')),
+                (e: unknown) => setAckErr(writeErrorAr(e)),
               )
             }
             data-testid="clinic-ack"
@@ -91,6 +97,11 @@ export function PatientDetail() {
           </Button>
         )}
       </div>
+      {ackErr && (
+        <p className="text-base font-semibold text-lv-red-ink" role="alert" data-testid="ack-error">
+          {ackErr}
+        </p>
+      )}
 
       <Card className="grid gap-4">
         <div>

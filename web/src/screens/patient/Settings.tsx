@@ -1,4 +1,4 @@
-import { Cloud, FlaskConical, LogOut, Usb, UserRound } from 'lucide-react';
+import { Cloud, Cpu, FlaskConical, LogOut, Usb, UserRound } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SimPanel } from '@/components/kh/SimPanel';
@@ -7,10 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHint, CardTitle } from '@/components/ui/card';
 import { ChoiceList } from '@/components/ui/segmented';
 import { SwitchRow } from '@/components/ui/switch';
-import type { SourceKind } from '@/data/DataSource';
+import { type SourceKind, writeErrorAr } from '@/data/DataSource';
 import { DEFAULT_DEVICE_ID } from '@/data/firebase-config';
 import { SerialSource, serialSupported } from '@/data/SerialSource';
 import { toLatinDigits } from '@/lib/format';
+import { BUILD_STATUS_AR } from '@/lib/words';
 import { MODE_AR, type Mode, modeAt } from '@/lib/level';
 import { normalizeSaudiPhone } from '@/lib/whatsapp';
 import { serverNow, useDevice, writeEvent } from '@/store/device';
@@ -69,8 +70,8 @@ export function Settings() {
     setModeErr('');
     try {
       await writeEvent({ kind: 'mode', data: { mode: m }, day: today.key });
-    } catch {
-      setModeErr('ما قدرنا نحفظ الوضع. تأكد من الإنترنت.');
+    } catch (e) {
+      setModeErr(writeErrorAr(e, 'ما قدرنا نحفظ الوضع. تأكد من الإنترنت.'));
     }
   };
 
@@ -212,7 +213,7 @@ export function Settings() {
       {patient && (
         <Section id="voice" title="الصوت">
           <SwitchRow
-            label="المساعد يقرأ الردود بصوت"
+            label="رفيق يقرأ الردود بصوت"
             checked={s.voice}
             onCheckedChange={(v) => s.set({ voice: v })}
           />
@@ -242,6 +243,12 @@ export function Settings() {
               icon: <FlaskConical />,
             },
             {
+              value: 'wokwi',
+              label: 'السجادة الافتراضية (Wokwi)',
+              hint: 'كود السجادة الحقيقي يشتغل على دائرة افتراضية ويرسل لـ Firebase. للعرض فقط.',
+              icon: <Cpu />,
+            },
+            {
               value: 'serial',
               label: 'كابل USB',
               hint: serialSupported()
@@ -260,6 +267,24 @@ export function Settings() {
       </Section>
 
       {s.dataSource === 'simulation' && <SimPanel />}
+
+      <Section
+        id="patient-device"
+        title="هذا الجوال"
+        hint="مقفل افتراضيًا. بدونه ما ينكتب أي شي في السجادة الحقيقية من هذا الجوال، حتى لو فتحت مصدر «السجادة»."
+      >
+        <SwitchRow
+          label="هذا جوال المريض"
+          hint={
+            s.dataSource === 'firebase'
+              ? 'شغّله بس على جوال المريض نفسه (أو جوال العائلة والعيادة المعتمد) عشان تنحفظ الفحوصات السريعة والتنبيهات.'
+              : 'يشتغل مع مصدر «السجادة (الإنترنت)» بس. المحاكاة وWokwi ما يكتبون في السجادة أبدًا.'
+          }
+          checked={s.patientDevice}
+          onCheckedChange={(v) => s.set({ patientDevice: v })}
+          testId="patient-device"
+        />
+      </Section>
 
       <Section id="demo" title="وضع العرض">
         <SwitchRow
@@ -323,16 +348,19 @@ export function Settings() {
       <Section id="about" title="عن خطوة">
         <div className="grid gap-2 text-base text-ink-2">
           <p>
-            خطوة سجادة عند مكان الوضوء تقيس حرارة 4 نقاط في كل قدم وتطبّق قاعدة IWGDF: فرق أكبر من{' '}
+            خطوة سجادة عند مكان الوضوء تقارن حرارة القدمين وتطبّق قاعدة IWGDF: فرق أكبر من{' '}
             <bdi dir="ltr">2.2°</bdi> في نفس النقطة يومين متتاليين.
+          </p>
+          <p className="font-semibold text-ink" data-testid="about-build-status">
+            {BUILD_STATUS_AR}.
           </p>
           <p className="font-semibold text-ink">
             أداة مراقبة تساعد على الإحالة، مو تشخيص. النموذج ما اختُبر سريريًا.
           </p>
           <p>
-            المساعد يرد بقوالب ثابتة مكتوبة مسبقًا، ولا يشخّص ولا يصف دواء. الذكاء الاصطناعي (Claude Haiku)
-            يفهم كلام المريض الحر بس، ويحوّله لواحد من بلاغات ثابتة. الرد من القوالب، والقرار من القاعدة،
-            والذكاء الاصطناعي ما يغيّر مستوى الخطر. واستُخدم Claude كذلك في كتابة أجزاء من الكود.
+            رفيق (المساعد) يرد بقوالب ثابتة مكتوبة مسبقًا، ولا يشخّص ولا يصف دواء. الذكاء الاصطناعي (Claude
+            Haiku) يفهم كلام المريض الحر بس، ويحوّله لواحد من بلاغات ثابتة. الرد من القوالب، والقرار من
+            القاعدة، والذكاء الاصطناعي ما يغيّر مستوى الخطر. واستُخدم Claude كذلك في كتابة أجزاء من الكود.
           </p>
           <p className="text-sm text-mute">
             فريق خطوة · MEDATHON 2026 · النسخة <span className="num">0.2.0</span> ·{' '}

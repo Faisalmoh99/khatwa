@@ -1,4 +1,12 @@
-import { BellRing, ClipboardCheck, Flame, Footprints, MessageCircle, PauseCircle } from 'lucide-react';
+import {
+  BellRing,
+  ClipboardCheck,
+  Flame,
+  Footprints,
+  MessageCircle,
+  PauseCircle,
+  PlayCircle,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { DayStrip } from '@/components/kh/DayStrip';
 import { DeviceChip } from '@/components/kh/DeviceChip';
@@ -14,6 +22,7 @@ import { MODE_AR } from '@/lib/level';
 import { serverNow, useDevice } from '@/store/device';
 import { useDayViews, useLadder } from '@/store/selectors';
 import { useSettings } from '@/store/settings';
+import { startTour, useTour } from '@/store/tour';
 
 /** Consecutive measured days ending today (or yesterday if today is not done yet). */
 export function Home() {
@@ -21,6 +30,7 @@ export function Home() {
   const today = views.at(-1)!;
   const ladder = useLadder();
   const demo = useSettings((s) => s.demoMode);
+  const tourOn = useTour((s) => s.active);
   const lastScan = useDevice((s) => s.scans.at(-1));
   const loaded = useDevice((s) => s.loaded);
   const offline = useDevice((s) => !!(s.connection.retrying || s.connection.error));
@@ -124,6 +134,17 @@ export function Home() {
         <DayStrip views={demo ? views : ladder.views} demo={demo} />
       </Card>
 
+      {!tourOn && (
+        <Card className="grid gap-2 border-brand-300 bg-brand-50" data-testid="tour-offer">
+          <p className="text-base text-ink">
+            أول مرة؟ جولة قصيرة: فحص، يومين، تنبيه العائلة، رفيق، والعيادة. بيانات محاكاة، بدون أي إعداد.
+          </p>
+          <Button size="lg" onClick={startTour} data-testid="tour-start">
+            <PlayCircle /> جرّب السيناريو
+          </Button>
+        </Card>
+      )}
+
       <LadderCard state={ladder} level={today.level} />
 
       <div className="grid grid-cols-2 gap-3">
@@ -134,7 +155,7 @@ export function Home() {
         </Button>
         <Button variant="soft" size="lg" asChild>
           <Link to="/assistant">
-            <MessageCircle /> المساعد
+            <MessageCircle /> رفيق
           </Link>
         </Button>
       </div>

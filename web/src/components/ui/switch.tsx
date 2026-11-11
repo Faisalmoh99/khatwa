@@ -9,12 +9,14 @@ export function SwitchRow({
   checked,
   onCheckedChange,
   disabled,
+  testId,
 }: {
   label: ReactNode;
   hint?: ReactNode;
   checked: boolean;
   onCheckedChange: (v: boolean) => void;
   disabled?: boolean;
+  testId?: string;
 }) {
   const id = useId();
   return (
@@ -28,6 +30,7 @@ export function SwitchRow({
         checked={checked}
         onCheckedChange={onCheckedChange}
         disabled={disabled}
+        data-testid={testId}
         className={cn(
           'relative h-8 w-14 shrink-0 rounded-full bg-line-strong transition-colors duration-kh',
           'data-[state=checked]:bg-brand-700 disabled:opacity-50',

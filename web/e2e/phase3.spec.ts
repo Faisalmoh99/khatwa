@@ -56,7 +56,7 @@ test.describe('phase 3: clinic', () => {
     await go(page, '/clinic', { as: 'clinic' });
     const items = page.getByTestId('patients').locator('li');
     await expect(items).toHaveCount(6);
-    await expect(items.first()).toContainText('الجهاز الحقيقي');
+    await expect(items.first()).toContainText('محاكاة'); // simulated data is never tagged as the real device
     for (let i = 1; i < 6; i++) await expect(items.nth(i)).toContainText('افتراضي');
     const scores = await items.evaluateAll((els) =>
       els.slice(1).map((e) => Number(e.textContent!.match(/\((\d+)\)/)?.[1])),

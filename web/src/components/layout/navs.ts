@@ -14,7 +14,7 @@ export const PATIENT_NAV: NavItem[] = [
   { to: '/home', label: 'الرئيسية', icon: House },
   { to: '/scan', label: 'الفحص', icon: Footprints },
   { to: '/history', label: 'السجل', icon: History },
-  { to: '/assistant', label: 'المساعد', icon: MessageCircle },
+  { to: '/assistant', label: 'رفيق', icon: MessageCircle },
   { to: '/more', label: 'المزيد', icon: LayoutGrid },
 ];
 

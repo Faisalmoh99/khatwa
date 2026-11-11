@@ -5,6 +5,8 @@ import { CLINIC_NAV } from '@/components/layout/navs';
 import { AppShell } from '@/components/layout/AppShell';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/cn';
+import { ownPatientTag } from '@/lib/words';
+import { useSettings } from '@/store/settings';
 import { usePatients } from '@/store/patients';
 
 const BAND = {
@@ -15,11 +17,13 @@ const BAND = {
 } as const;
 
 export function Patients() {
+  const kind = useSettings((s) => s.dataSource);
   const list = usePatients();
   return (
     <AppShell title="المرضى" nav={CLINIC_NAV}>
       <p className="text-base text-ink-2">
-        المريض الحقيقي فوق دائمًا. البقية <b>افتراضيون</b> ببيانات محاكاة، مرتّبون حسب الأولوية.
+        مريض السجادة فوق دائمًا ({ownPatientTag(kind)}). البقية <b>افتراضيون</b> ببيانات محاكاة، مرتّبون حسب
+        الأولوية.
       </p>
       <ul className="grid gap-3" data-testid="patients">
         {list.map((p) => (
@@ -44,7 +48,7 @@ export function Patients() {
                         p.virtual ? 'bg-lv-none-soft text-lv-none-ink' : 'bg-brand-100 text-brand-900',
                       )}
                     >
-                      {p.virtual ? 'افتراضي' : 'الجهاز الحقيقي'}
+                      {p.virtual ? 'افتراضي' : ownPatientTag(kind)}
                     </span>
                   </span>
                   <span className="mt-1 flex flex-wrap items-center gap-2">

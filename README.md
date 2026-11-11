@@ -2,13 +2,17 @@
 
 [![CI](https://github.com/Faisalmoh99/khatwa/actions/workflows/ci.yml/badge.svg?branch=web-app)](https://github.com/Faisalmoh99/khatwa/actions/workflows/ci.yml)
 
-**A mat placed where people do wudu.** A person with diabetes stands on it once a day, before wudu. It measures the temperature of 4 points on each foot and compares the two feet. When the same point is **more than 2.2 °C warmer on the same foot for two consecutive days** (IWGDF guidance), the app alerts the patient, then the family, then the clinic, in Arabic.
+**A mat placed where people do wudu.** A person with diabetes stands on it once a day, before wudu. It is designed to measure the temperature of 4 points on each foot (plus heel pressure to check the person is standing) and compare the two feet. When the same point is **more than 2.2 °C warmer on the same foot for two consecutive days** (IWGDF guidance), the app alerts the patient, then the family, then the clinic, in Arabic.
 
 > **A monitoring tool that supports referral. Not a diagnostic device.** The prototype has not been clinically tested.
+>
+> **Designed for 4 temperature sensors per foot + heel pressure. The physical mat is being built for the finals.**
+> «مصمم لـ 4 حساسات حرارة لكل قدم + ضغط الكعب. الجهاز المادي يُبنى للنهائيات»
+> What runs today: the app, Rafiq (the assistant), and the real ESP32 firmware on a virtual circuit (Wokwi). The demo link opens on simulated data.
 
 Team Khatwa · MEDATHON 2026 (SYHF, Jeddah).
 
-| Home | Live scan | Result | Assistant |
+| Home | Live scan | Result | Rafiq (assistant) |
 |---|---|---|---|
 | ![Home](web/e2e/__screenshots__/25-home-orange.png) | ![Live scan](web/e2e/__screenshots__/22-scan-measuring.png) | ![Result](web/e2e/__screenshots__/24-result-orange.png) | ![Assistant](web/e2e/__screenshots__/41-assistant-redflag.png) |
 | **History** | **Clinic** | **Visit report** | **Family** |
@@ -43,19 +47,20 @@ flowchart LR
 
 More detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · data contract: [docs/DATA_SCHEMA.md](docs/DATA_SCHEMA.md).
 
-## Built vs. coming
+## Built and tested / Designed / Next
 
-| Built now | Coming (shown as «إصدار قادم», no numbers, no logic) |
-|---|---|
-| 4 temperature sensors per foot, 1 pressure sensor under each heel (standing check) | Pressure map of the whole foot |
-| IWGDF rule (> 2.2 °C, same point, same foot, 2 consecutive days) with quality checks: one foot, movement, wet foot, faulty sensor, whole-foot difference | Perfusion measurement |
-| Adherence ladder: reminder → family → clinic, pause modes (travel, bandage, hospital) | AI analysis of foot photos (photos are stored for the clinic only) |
-| Assistant with fixed templates, Arabic voice output and voice input | Real push notifications (today: in-app reminder) |
-| Family WhatsApp message (wa.me), clinic list, audit log, visit report with QR and PDF | Medical-grade temperature sensors (TMP117) |
-| Rule lab on synthetic patients (labelled "simulation, numbers from our assumptions") | |
-| AI (Claude Haiku): understands the patient's free text as one of 7 fixed reports, and an optional doctor summary labelled «ملخص آلي، راجع الأرقام» | |
-| ESP32 firmware: stand detection, stability, -127/85 handling, offline queue, USB line; contract-tested | |
-| Installable PWA that opens offline | Android app (Capacitor) |
+| Built and tested (evidence in this repo) | Designed, not built yet | Next |
+|---|---|---|
+| Web app (PWA): patient, family and clinic screens; opens offline. Unit + e2e tests at iPhone size, accessibility checks (axe) | The physical mat: 4 × DS18B20 per foot + 1 pressure sensor under each heel, ESP32, LEDs, buzzer (parts are ordered only if we reach the finals) | Build the mat for the finals, then the calibration and accuracy tests below |
+| IWGDF rule engine (> 2.2 °C, same point, same foot, 2 consecutive days) with quality checks: one foot, movement, wet foot, faulty sensor, whole-foot difference | Pressure map of the whole foot (the heel sensor only checks standing) | Pilot with a clinic, after ethics approval |
+| Adherence ladder (reminder → family → clinic), pause modes, escalation audit log | Perfusion measurement | Real push notifications (today: in-app reminder) |
+| Rafiq: fixed templates + Claude Haiku for free text (never sets the level), Arabic voice | AI analysis of foot photos (photos are only stored for the clinic) | Android app (Capacitor) |
+| Family WhatsApp message, clinic list, visit report with QR and PDF | Medical-grade sensors (TMP117) | Data hosting in Saudi Arabia + PDPL review |
+| ESP32 firmware: compiles for ESP32, core logic tested on the computer (g++), JSON checked against the database rules | | |
+| Virtual mat: the same firmware on a Wokwi circuit (8 × DS18B20, 2 potentiometers standing in for the heel sensors) writing to Firebase, shown in the app. *In progress, see `firmware/wokwi/`* | | |
+| Rule lab on synthetic patients (labelled "simulation, numbers from our assumptions") | | |
+
+Everything the demo shows comes from the simulator or the Wokwi virtual mat, and every screen says so in a banner.
 
 ## Repository
 
@@ -80,7 +85,9 @@ tests/               legacy rule tests (node:test)
 cd web
 npm install
 npm run dev                 # http://localhost:5173
-# open http://localhost:5173/?source=sim&as=patient   → in-browser simulator, no internet needed
+# first visit opens on the simulator with 30 days of simulated history; «جرّب السيناريو» runs the guided tour
+# Settings → «مصدر البيانات»: simulation / the real mat (Firebase) / the virtual mat (Wokwi) / USB
+# Nothing is written to Firebase unless the source is the real mat AND «هذا جوال المريض» is on
 ```
 
 | Command (in `web/`) | What it does |
@@ -102,7 +109,7 @@ The legacy rule tests still run from the repo root: `npm test`. CI runs everythi
 
 ## Test results
 
-_Filled in after measuring (11–12 November). No scan time or accuracy figure is claimed before it is measured._
+_Planned for the physical mat (finals). No scan time or accuracy figure is claimed before it is measured on real hardware._
 
 | Test | Method | Target | Result |
 |---|---|---|---|
@@ -126,11 +133,12 @@ _Filled in after measuring (11–12 November). No scan time or accuracy figure i
 
 ## بالعربي (مختصر)
 
-**خطوة** سجادة عند مكان الوضوء، يقف عليها مريض السكري كل يوم قبل الوضوء. تقيس حرارة 4 نقاط في كل قدم وتقارن القدمين. إذا صار الفرق في نفس النقطة **أكبر من 2.2°م ليومين متتاليين** ونفس القدم هي الأسخن (توصية IWGDF)، ننبّه المريض ثم العائلة ثم العيادة.
+**خطوة** سجادة عند مكان الوضوء، يقف عليها مريض السكري كل يوم قبل الوضوء. **مصمم لـ 4 حساسات حرارة لكل قدم + ضغط الكعب. الجهاز المادي يُبنى للنهائيات.** وتقارن القدمين. إذا صار الفرق في نفس النقطة **أكبر من 2.2°م ليومين متتاليين** ونفس القدم هي الأسخن (توصية IWGDF)، ننبّه المريض ثم العائلة ثم العيادة.
 
 - **أداة مراقبة تدعم الإحالة، مو تشخيص.** النموذج ما اختُبر سريريًا.
-- **مبني الآن:** 4 حساسات حرارة لكل قدم، وحساس ضغط تحت كل كعب للتأكد من الوقوف، وقاعدة IWGDF، وسلّم المتابعة، والمساعد بقوالب ثابتة، وتقرير الزيارة، وواجهة العائلة والعيادة، والتطبيق يشتغل بدون نت.
+- **مبني ومجرّب:** التطبيق (المريض والعائلة والعيادة، ويشتغل بدون نت)، وقاعدة IWGDF، وسلّم المتابعة، ورفيق (قوالب ثابتة + Claude Haiku للكلام الحر)، وتقرير الزيارة، وكود السجادة (ESP32) على دائرة افتراضية في Wokwi.
+- **مصمم، ما انبنى:** السجادة نفسها (4 حساسات حرارة لكل قدم + ضغط الكعب). القطع تنطلب إذا وصلنا للنهائيات.
 - **إصدار قادم:** خريطة الضغط، والتروية، وتحليل الصور بالذكاء الاصطناعي، والإشعارات الحقيقية، وحساسات TMP117.
 - **الشفافية:** استُخدم Claude في كتابة أجزاء من الكود والوثائق. وفي التطبيق: Claude Haiku يفهم كلام المريض الحر ويحوّله لواحد من 7 بلاغات ثابتة، ويكتب ملخص اختياري للطبيب. **ما يغيّر مستوى الخطر أبدًا**، والرد للمريض دايمًا من القوالب. أرقام مختبر القاعدة من افتراضاتنا.
 
-التشغيل: `cd web && npm install && npm run dev` ثم افتح `localhost:5173/?source=sim&as=patient`.
+التشغيل: `cd web && npm install && npm run dev` ثم افتح `localhost:5173` (يفتح على المحاكاة، وفيه زر «جرّب السيناريو»).

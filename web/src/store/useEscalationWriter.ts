@@ -9,10 +9,13 @@ import { useSettings } from './settings';
  * Writes today's due alerts as `escalation` events (the audit log): who, when (server time), why.
  * Runs only in the patient app, only after the first events snapshot, and never writes a key twice
  * (dedupe against stored events, plus an in-session guard against double renders).
+ * A read-only source (real mat without «هذا جوال المريض», or the Wokwi mat) gets nothing written.
  */
 export function useEscalationWriter() {
   const role = useSettings((s) => s.role);
   const consent = useSettings((s) => s.consents.family);
+  // Re-run when the switch changes (FirebaseSource.writable reads it at call time).
+  const patientDevice = useSettings((s) => s.patientDevice);
   const source = useDevice((s) => s.source);
   const ready = useDevice((s) => s.eventsLoaded && s.loaded);
   const events = useDevice((s) => s.events);
@@ -21,7 +24,7 @@ export function useEscalationWriter() {
   const written = useRef<{ src: unknown; keys: Set<string> }>({ src: null, keys: new Set() });
 
   useEffect(() => {
-    if (role !== 'patient' || !ready || !source) return;
+    if (role !== 'patient' || !ready || !source || !source.writable) return;
     if (written.current.src !== source) written.current = { src: source, keys: new Set() };
     const due = dueEscalations(views, ladder, {
       familyConsent: consent,
@@ -41,5 +44,5 @@ export function useEscalationWriter() {
       if (e.urgent) data.urgent = true;
       void writeEvent({ kind: 'escalation', day: e.day, data }).catch(() => keys.delete(e.key));
     }
-  }, [role, ready, source, views, ladder, events, consent]);
+  }, [role, ready, source, views, ladder, events, consent, patientDevice]);
 }

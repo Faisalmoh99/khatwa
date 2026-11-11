@@ -8,6 +8,7 @@ import { Card, CardTitle } from '@/components/ui/card';
 import { SerialSource } from '@/data/SerialSource';
 import { useNow } from '@/hooks/useNow';
 import { ago, arDate, clock } from '@/lib/format';
+import { BUILD_STATUS_AR, matStatusAr } from '@/lib/words';
 import { serverNow, useDevice } from '@/store/device';
 import { useSettings } from '@/store/settings';
 
@@ -15,6 +16,7 @@ const SOURCE_AR = {
   firebase: 'السجادة عبر الإنترنت',
   simulation: 'محاكاة داخل المتصفح',
   serial: 'كابل USB',
+  wokwi: 'السجادة الافتراضية (Wokwi)',
 } as const;
 
 function Row({ k, children }: { k: string; children: ReactNode }) {
@@ -35,7 +37,8 @@ export function Device() {
   const source = useDevice((s) => s.source);
   const conn = useDevice((s) => s.connection);
   const kind = useSettings((s) => s.dataSource);
-  const deviceId = useSettings((s) => s.deviceId);
+  const settingsId = useSettings((s) => s.deviceId);
+  const deviceId = useDevice((s) => s.source?.deviceId) ?? settingsId;
   const last = scans.at(-1);
   const now = serverNow();
 
@@ -52,7 +55,7 @@ export function Device() {
         </span>
         <div>
           <p className="text-2xl font-semibold text-ink" data-testid="device-online">
-            {online ? 'السجادة متصلة' : 'السجادة غير متصلة'}
+            {matStatusAr(kind, online)}
           </p>
           <p className="text-sm text-ink-2">
             {status?.lastSeen ? `آخر إشارة ${ago(now - status.lastSeen)}` : 'ما وصلت أي إشارة بعد'}
@@ -78,7 +81,13 @@ export function Device() {
             </Link>
           </Row>
           <Row k="الجهاز يرسل من">
-            {status?.source === 'esp32' ? 'السجادة الحقيقية' : status?.source === 'sim' ? 'محاكي' : '—'}
+            {status?.source === 'esp32'
+              ? kind === 'wokwi'
+                ? 'كود ESP32 الحقيقي على دائرة افتراضية (Wokwi)'
+                : 'السجادة الحقيقية'
+              : status?.source === 'sim'
+                ? 'محاكي'
+                : '—'}
           </Row>
           <Row k="رقم الجهاز">
             <Num>{deviceId}</Num>
@@ -96,6 +105,14 @@ export function Device() {
             آخر سطر غير مفهوم من USB: <bdi dir="ltr">{source.lastRejected}</bdi>
           </p>
         )}
+      </Card>
+
+      <Card className="grid gap-1 border-brand-300 bg-brand-50" data-testid="build-status">
+        <CardTitle>حالة الجهاز</CardTitle>
+        <p className="text-base text-ink">{BUILD_STATUS_AR}.</p>
+        <p className="text-sm text-mute">
+          في هذه النسخة: محاكاة داخل المتصفح، أو كود السجادة الحقيقي يشتغل على دائرة افتراضية (Wokwi).
+        </p>
       </Card>
 
       <Card className="grid gap-3">

@@ -20,7 +20,15 @@ export interface Consents {
 }
 
 export interface SettingsState {
+  /** First-time visitors start on the simulation (demo build); the real mat is chosen in Settings. */
   dataSource: SourceKind;
+  /**
+   * «هذا جوال المريض». Off by default. Nothing is written to Firebase unless the source is the real mat
+   * AND this is on, so a judge or a visitor opening the demo link can never write into the real device.
+   */
+  patientDevice: boolean;
+  /** 30-day history loaded into an empty simulation once (first visit). Cleared after use or by ?source=. */
+  simSeed: string | null;
   deviceId: string;
   /** Demo mode: every scan counts as one day (needed to show the 2-day rule in a short video). */
   demoMode: boolean;
@@ -59,7 +67,9 @@ const safeStorage = createJSONStorage(() => {
 export const useSettings = create<SettingsState>()(
   persist(
     (set) => ({
-      dataSource: 'firebase',
+      dataSource: 'simulation',
+      patientDevice: false,
+      simSeed: 'developing',
       deviceId: DEFAULT_DEVICE_ID,
       demoMode: false,
       demoSince: null,
@@ -75,7 +85,13 @@ export const useSettings = create<SettingsState>()(
       voice: true,
       set: (p) => set(p),
     }),
-    { name: 'kh.settings', storage: safeStorage, version: 1 },
+    {
+      name: 'kh.settings',
+      storage: safeStorage,
+      version: 2,
+      // v1 phones keep their source; the write switch starts off and nothing is preloaded.
+      migrate: (old) => ({ ...(old as object), patientDevice: false, simSeed: null }) as SettingsState,
+    },
   ),
 );
 
@@ -89,9 +105,13 @@ export function applyUrlOverrides(search = typeof location !== 'undefined' ? loc
     firebase: 'firebase',
     usb: 'serial',
     serial: 'serial',
+    wokwi: 'wokwi',
   };
   const patch: Partial<SettingsState> = {};
-  if (src && map[src]) patch.dataSource = map[src];
+  // An explicit source in the link means an explicit setup (tests, demo links): no preloaded history.
+  if (src && map[src]) Object.assign(patch, { dataSource: map[src], simSeed: null });
+  // ?writes=1 = «هذا جوال المريض» (Firebase e2e tests write to a test device).
+  if (q.get('writes') === '1') patch.patientDevice = true;
   const dev = q.get('dev');
   if (dev && /^[a-z0-9-]{3,40}$/i.test(dev)) patch.deviceId = dev;
   if (q.get('demo') === '1') Object.assign(patch, { demoMode: true, demoSince: 0 });

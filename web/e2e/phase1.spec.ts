@@ -60,7 +60,7 @@ test.describe('phase 1: entry flow', () => {
 test.describe('phase 1: patient home, scan, result', () => {
   test('home before any reading', async ({ page }) => {
     await go(page, '/home');
-    await expect(page.getByTestId('device-chip')).toContainText('متصلة');
+    await expect(page.getByTestId('device-chip')).toContainText('المحاكي شغّال');
     await expect(page.getByTestId('ladder-text')).toContainText('ابدأ أول قياس');
     await checkLayout(page);
     await shot(page, '20-home-empty', { full: true });
@@ -182,11 +182,11 @@ test.describe('phase 1: quick check, WhatsApp, device, settings', () => {
 
   test('device screen: online, then offline when the heartbeat stops', async ({ page }) => {
     await go(page, '/device');
-    await expect(page.getByTestId('device-online')).toHaveText('السجادة متصلة');
+    await expect(page.getByTestId('device-online')).toHaveText('المحاكي شغّال');
     await checkLayout(page);
     await shot(page, '33-device', { full: true });
     await page.getByRole('switch', { name: 'الجهاز الافتراضي شغّال' }).click();
-    await expect(page.getByTestId('device-online')).toHaveText('السجادة غير متصلة');
+    await expect(page.getByTestId('device-online')).toHaveText('المحاكي متوقف');
   });
 
   test('settings and more', async ({ page }) => {

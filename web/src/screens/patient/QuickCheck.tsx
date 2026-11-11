@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { writeErrorAr } from '@/data/DataSource';
 import { Link } from 'react-router-dom';
 import { LevelHero } from '@/components/kh/LevelHero';
 import { WhatsAppButton } from '@/components/kh/WhatsAppButton';
@@ -35,8 +36,8 @@ export function QuickCheck() {
     try {
       await writeEvent({ kind: 'quickcheck', data: { ...data }, day: today.key });
       setSaved(data);
-    } catch {
-      setError('ما قدرنا نحفظ إجابتك. تأكد من الإنترنت وجرّب مرة ثانية.');
+    } catch (e) {
+      setError(writeErrorAr(e, 'ما قدرنا نحفظ إجابتك. تأكد من الإنترنت وجرّب مرة ثانية.'));
     }
   };
 

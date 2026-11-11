@@ -19,6 +19,7 @@ import {
   Channel,
   type ConnectionState,
   type DataSource,
+  ReadOnlyError,
   type RejectedRecord,
   type Unsubscribe,
 } from './DataSource';
@@ -42,8 +43,16 @@ import {
 
 const MAX_BACKOFF_MS = 30_000;
 
+export interface FirebaseSourceOptions {
+  /** 'wokwi' = the virtual mat (same database, read-only for the app). */
+  kind?: 'firebase' | 'wokwi';
+  /** Checked on every write. Default: no writes (read-only viewer). */
+  canWrite?: () => boolean;
+}
+
 export class FirebaseSource implements DataSource {
-  readonly kind = 'firebase' as const;
+  readonly kind: 'firebase' | 'wokwi';
+  private readonly canWrite: () => boolean;
   private app!: FirebaseApp;
   private db!: Database;
   private auth!: Auth;
@@ -62,7 +71,17 @@ export class FirebaseSource implements DataSource {
   private events = new Channel<KhEvent[]>();
   private photos = new Channel<Photo[]>();
 
-  constructor(readonly deviceId: string) {}
+  constructor(
+    readonly deviceId: string,
+    opts: FirebaseSourceOptions = {},
+  ) {
+    this.kind = opts.kind ?? 'firebase';
+    this.canWrite = opts.canWrite ?? (() => false);
+  }
+
+  get writable() {
+    return this.canWrite();
+  }
 
   private path(sub: string) {
     return `devices/${this.deviceId}/${sub}`;
@@ -192,11 +211,13 @@ export class FirebaseSource implements DataSource {
     return this.photos.subscribe(cb);
   }
   async writePhoto(p: NewPhoto) {
+    if (!this.canWrite()) throw new ReadOnlyError();
     await this.ready;
     await push(ref(this.db, this.path('photos')), { ...stripUndefined(p), ts: serverTimestamp() });
   }
 
   async writeEvent(e: NewEvent) {
+    if (!this.canWrite()) throw new ReadOnlyError();
     await this.ready;
     await push(ref(this.db, this.path('events')), { ...stripUndefined(e), ts: serverTimestamp() });
   }

@@ -1,5 +1,7 @@
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { ConnectionBanner, SourceBanner } from '@/components/kh/Banners';
+import { useTourDriver } from '@/hooks/useTourDriver';
 import { UpdateBanner } from '@/components/kh/UpdateBanner';
 import { Consent } from '@/screens/intro/Consent';
 import { Login } from '@/screens/intro/Login';
@@ -16,6 +18,7 @@ import { Result } from '@/screens/patient/Result';
 import { Scan } from '@/screens/patient/Scan';
 import { Settings } from '@/screens/patient/Settings';
 import { type Role, useSettings } from '@/store/settings';
+import { useTour } from '@/store/tour';
 import { useEscalationWriter } from '@/store/useEscalationWriter';
 import { useSourceBinding } from '@/store/useSourceBinding';
 
@@ -52,12 +55,14 @@ function Gate() {
 /** Protects role screens: anyone not fully set up goes back through the gate. */
 function RequireRole({ role, children }: { role: Role | Role[]; children: ReactNode }) {
   const s = useSettings();
+  // The tour switches roles between steps itself; a role mismatch mid-switch must not bounce it home.
+  const touring = useTour((t) => t.active);
   const ok =
     s.onboarded &&
     s.consents.core &&
     s.session &&
     s.role &&
-    (Array.isArray(role) ? role.includes(s.role) : s.role === role);
+    (touring || (Array.isArray(role) ? role.includes(s.role) : s.role === role));
   return ok ? <>{children}</> : <Navigate to="/" replace />;
 }
 
@@ -67,6 +72,12 @@ function ScrollToTop() {
   useEffect(() => {
     if (!location.hash) window.scrollTo(0, 0);
   }, [pathname]);
+  return null;
+}
+
+/** Inside the router: the tour navigates between screens. */
+function TourDriver() {
+  useTourDriver();
   return null;
 }
 
@@ -92,8 +103,14 @@ export function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
+      <TourDriver />
       <UpdateBanner />
       {splash && <Splash />}
+      {/* Honesty banners on every screen, including the welcome and login screens. */}
+      <div className="print:hidden">
+        <SourceBanner />
+        <ConnectionBanner />
+      </div>
       <Suspense fallback={null}>
         <Routes>
           <Route path="/" element={<Gate />} />

@@ -1,9 +1,16 @@
 import { useEffect } from 'react';
-import { createSource, type DataSource } from '@/data';
+import { createSource, type DataSource, SimulationSource, WOKWI_DEVICE_ID } from '@/data';
 import { loadSnapshot, saveSnapshot } from '@/data/cache';
 import { liveMessages } from '@/lib/quality';
 import { initialDevice, newestArrival, rememberMsgs, useDevice } from './device';
 import { useSettings } from './settings';
+import { TOUR_TICK_MS, useTour } from './tour';
+
+/** Firebase writes need the real mat AND «هذا جوال المريض». Read at write time, so toggling applies at once. */
+export const firebaseWritesAllowed = () => {
+  const s = useSettings.getState();
+  return s.dataSource === 'firebase' && s.patientDevice;
+};
 
 /**
  * Creates the active DataSource from settings and pipes it into the device store.
@@ -11,16 +18,19 @@ import { useSettings } from './settings';
  */
 export function useSourceBinding() {
   const kind = useSettings((s) => s.dataSource);
-  const deviceId = useSettings((s) => s.deviceId);
+  const chosenId = useSettings((s) => s.deviceId);
+  const deviceId = kind === 'wokwi' ? WOKWI_DEVICE_ID : chosenId;
 
   useEffect(() => {
     let cancelled = false;
     let src: DataSource | null = null;
     let offs: (() => void)[] = [];
-    const tick = Number(new URLSearchParams(location.search).get('simTick')) || undefined;
+    const urlTick = Number(new URLSearchParams(location.search).get('simTick')) || undefined;
+    const tick = useTour.getState().active ? Math.min(urlTick ?? TOUR_TICK_MS, TOUR_TICK_MS) : urlTick;
+    const remote = kind === 'firebase' || kind === 'wokwi';
     useDevice.setState({ source: null, ...initialDevice });
     // Offline start: show the last snapshot saved on this phone until live data arrives.
-    if (kind === 'firebase') {
+    if (remote) {
       const snap = loadSnapshot(deviceId);
       if (snap)
         useDevice.setState({
@@ -33,7 +43,7 @@ export function useSourceBinding() {
     }
     let saveTimer: ReturnType<typeof setTimeout> | null = null;
     const persist = () => {
-      if (kind !== 'firebase') return;
+      if (!remote) return;
       if (saveTimer) clearTimeout(saveTimer);
       saveTimer = setTimeout(() => {
         const st = useDevice.getState();
@@ -42,7 +52,7 @@ export function useSourceBinding() {
       }, 1000);
     };
 
-    void createSource(kind, deviceId, { tickMs: tick }).then((s) => {
+    void createSource(kind, deviceId, { tickMs: tick }, firebaseWritesAllowed).then((s) => {
       if (cancelled) return;
       src = s;
       useDevice.setState({ source: s });
@@ -71,7 +81,13 @@ export function useSourceBinding() {
         s.subscribeEvents((events) => (useDevice.setState({ events, eventsLoaded: true }), persist())),
         s.subscribePhotos((photos) => useDevice.setState({ photos })),
       ];
-      void s.start();
+      void s.start().then(() => {
+        // First visit: an empty simulation gets the 30-day "developing" history once (labelled simulation).
+        const seed = useSettings.getState().simSeed;
+        if (cancelled || !seed || !(s instanceof SimulationSource)) return;
+        if (s.empty) s.loadDays(seed);
+        useSettings.getState().set({ simSeed: null });
+      });
     });
 
     return () => {

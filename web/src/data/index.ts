@@ -1,4 +1,4 @@
-import type { DataSource, SourceKind } from './DataSource';
+import { type DataSource, type SourceKind, WOKWI_DEVICE_ID } from './DataSource';
 import { SerialSource } from './SerialSource';
 import { SimulationSource, type SimOptions } from './SimulationSource';
 
@@ -14,9 +14,12 @@ export async function createSource(
   kind: SourceKind,
   deviceId: string,
   sim: SimOptions = {},
+  canWrite: () => boolean = () => false,
 ): Promise<DataSource> {
   if (kind === 'simulation') return new SimulationSource(deviceId, sim);
   if (kind === 'serial') return new SerialSource(deviceId);
   const { FirebaseSource } = await import('./FirebaseSource');
-  return new FirebaseSource(deviceId);
+  // The Wokwi mat is read-only for the app: only the virtual ESP32 writes there.
+  if (kind === 'wokwi') return new FirebaseSource(WOKWI_DEVICE_ID, { kind: 'wokwi', canWrite: () => false });
+  return new FirebaseSource(deviceId, { kind: 'firebase', canWrite });
 }

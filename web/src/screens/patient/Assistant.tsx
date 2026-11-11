@@ -22,6 +22,7 @@ import { useChat } from '@/store/chat';
 import { writeEvent } from '@/store/device';
 import { useDayViews, useLadder } from '@/store/selectors';
 import { useSettings } from '@/store/settings';
+import { useTour } from '@/store/tour';
 
 function useChatContext(): ChatContext {
   const views = useDayViews();
@@ -58,7 +59,8 @@ export function Assistant() {
   const setSettings = useSettings((s) => s.set);
   const day = useChat((s) => s.days[ctx.dayKey]);
   const setDay = useChat((s) => s.setDay);
-  const [text, setText] = useState('');
+  // The tour leaves a sentence ready to send (the visitor still presses send).
+  const [text, setText] = useState(() => useTour.getState().draft);
   const [typing, setTyping] = useState(false);
   const deviceId = useSettings((s) => s.deviceId);
   const listRef = useRef<HTMLOListElement>(null);
@@ -111,7 +113,7 @@ export function Assistant() {
 
   return (
     <AppShell
-      title="المساعد"
+      title="رفيق"
       nav={PATIENT_NAV}
       className="pb-56"
       end={
@@ -128,7 +130,7 @@ export function Assistant() {
       }
     >
       <p className="text-center text-sm text-mute">
-        ردود مكتوبة مسبقًا. المساعد ما يشخّص ولا يصف دواء، ويبلّغ العيادة إذا احتجت.
+        رفيق يرد بردود مكتوبة مسبقًا. ما يشخّص ولا يصف دواء، ويبلّغ العيادة إذا احتجت.
       </p>
       <ol ref={listRef} className="grid gap-3" aria-live="polite" data-testid="chat">
         {msgs.map((m, i) =>
@@ -157,7 +159,7 @@ export function Assistant() {
           ),
         )}
         {typing && (
-          <li className="flex items-end gap-2" aria-label="المساعد يكتب" data-testid="chat-typing">
+          <li className="flex items-end gap-2" aria-label="رفيق يكتب" data-testid="chat-typing">
             <img src="/logo.png" alt="" width={32} height={32} className="mb-1 shrink-0 rounded-full" />
             <p className="animate-soft-pulse rounded-lg rounded-es-sm border border-line bg-surface px-4 py-3 text-lg text-mute">
               …

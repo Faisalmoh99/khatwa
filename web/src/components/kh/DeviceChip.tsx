@@ -1,11 +1,14 @@
 import { Wifi, WifiOff } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/cn';
+import { matStatusAr } from '@/lib/words';
 import { useDevice } from '@/store/device';
+import { useSettings } from '@/store/settings';
 
 /** Small device status pill linking to "My device". */
 export function DeviceChip({ className }: { className?: string }) {
   const online = useDevice((s) => s.online);
+  const kind = useSettings((s) => s.dataSource);
   return (
     <Link
       to="/device"
@@ -19,7 +22,7 @@ export function DeviceChip({ className }: { className?: string }) {
       data-testid="device-chip"
     >
       {online ? <Wifi className="size-4" aria-hidden /> : <WifiOff className="size-4" aria-hidden />}
-      {online ? 'السجادة متصلة' : 'السجادة غير متصلة'}
+      {matStatusAr(kind, online)}
     </Link>
   );
 }
