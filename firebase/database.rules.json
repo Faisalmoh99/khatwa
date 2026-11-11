@@ -7,7 +7,7 @@
         ".read": "auth != null",
         ".validate": "$dev.matches(/^khatwa-[a-z0-9-]{1,24}$/)",
         "status": {
-          ".write": "auth != null && auth.uid === 'J3rETaXXaDQS2GkWg9PHH4OcX1a2'",
+          ".write": "auth != null && (auth.uid === 'J3rETaXXaDQS2GkWg9PHH4OcX1a2' || (auth.uid === 'DQ65EfL8c6M52ruhV2cebwwkvtC2' && $dev === 'khatwa-demo'))",
           ".validate": "newData.hasChildren(['lastSeen'])",
           "online": {
             ".validate": "newData.isBoolean()"
@@ -22,14 +22,14 @@
             ".validate": "newData.val() === 'esp32' || newData.val() === 'sim'"
           },
           "rssi": {
-            ".validate": "newData.isNumber()"
+            ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() >= -127 && newData.val() <= 0))"
           },
           "$other": {
             ".validate": false
           }
         },
         "live": {
-          ".write": "auth != null && auth.uid === 'J3rETaXXaDQS2GkWg9PHH4OcX1a2'",
+          ".write": "auth != null && (auth.uid === 'J3rETaXXaDQS2GkWg9PHH4OcX1a2' || (auth.uid === 'DQ65EfL8c6M52ruhV2cebwwkvtC2' && $dev === 'khatwa-demo'))",
           ".validate": "newData.hasChildren(['phase', 'ts'])",
           "phase": {
             ".validate": "newData.val() === 'idle' || newData.val() === 'placing' || newData.val() === 'settling' || newData.val() === 'done' || newData.val() === 'error'"
@@ -40,16 +40,16 @@
           "L": {
             ".validate": "newData.hasChildren(['0', '1', '2', '3'])",
             "0": {
-              ".validate": "newData.isNumber()"
+              ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -55 && newData.val() <= 125)))"
             },
             "1": {
-              ".validate": "newData.isNumber()"
+              ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -55 && newData.val() <= 125)))"
             },
             "2": {
-              ".validate": "newData.isNumber()"
+              ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -55 && newData.val() <= 125)))"
             },
             "3": {
-              ".validate": "newData.isNumber()"
+              ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -55 && newData.val() <= 125)))"
             },
             "$other": {
               ".validate": false
@@ -58,16 +58,16 @@
           "R": {
             ".validate": "newData.hasChildren(['0', '1', '2', '3'])",
             "0": {
-              ".validate": "newData.isNumber()"
+              ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -55 && newData.val() <= 125)))"
             },
             "1": {
-              ".validate": "newData.isNumber()"
+              ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -55 && newData.val() <= 125)))"
             },
             "2": {
-              ".validate": "newData.isNumber()"
+              ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -55 && newData.val() <= 125)))"
             },
             "3": {
-              ".validate": "newData.isNumber()"
+              ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -55 && newData.val() <= 125)))"
             },
             "$other": {
               ".validate": false
@@ -86,7 +86,7 @@
             ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100"
           },
           "elapsedSec": {
-            ".validate": "newData.isNumber() && newData.val() >= 0"
+            ".validate": "newData.isNumber() && newData.val() >= 0 && ($dev !== 'khatwa-demo' || newData.val() <= 600)"
           },
           "ts": {
             ".validate": "newData.isNumber() && newData.val() <= now + 60000"
@@ -100,21 +100,21 @@
             "ts"
           ],
           "$scan": {
-            ".write": "auth != null && auth.uid === 'J3rETaXXaDQS2GkWg9PHH4OcX1a2' && !data.exists()",
+            ".write": "auth != null && (auth.uid === 'J3rETaXXaDQS2GkWg9PHH4OcX1a2' || (auth.uid === 'DQ65EfL8c6M52ruhV2cebwwkvtC2' && $dev === 'khatwa-demo')) && !data.exists()",
             ".validate": "newData.hasChildren(['L', 'R', 'ts', 'source', 'stable', 'standingOk'])",
             "L": {
               ".validate": "newData.hasChildren(['0', '1', '2', '3'])",
               "0": {
-                ".validate": "newData.isNumber()"
+                ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -55 && newData.val() <= 125)))"
               },
               "1": {
-                ".validate": "newData.isNumber()"
+                ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -55 && newData.val() <= 125)))"
               },
               "2": {
-                ".validate": "newData.isNumber()"
+                ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -55 && newData.val() <= 125)))"
               },
               "3": {
-                ".validate": "newData.isNumber()"
+                ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -55 && newData.val() <= 125)))"
               },
               "$other": {
                 ".validate": false
@@ -123,16 +123,16 @@
             "R": {
               ".validate": "newData.hasChildren(['0', '1', '2', '3'])",
               "0": {
-                ".validate": "newData.isNumber()"
+                ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -55 && newData.val() <= 125)))"
               },
               "1": {
-                ".validate": "newData.isNumber()"
+                ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -55 && newData.val() <= 125)))"
               },
               "2": {
-                ".validate": "newData.isNumber()"
+                ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -55 && newData.val() <= 125)))"
               },
               "3": {
-                ".validate": "newData.isNumber()"
+                ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -55 && newData.val() <= 125)))"
               },
               "$other": {
                 ".validate": false
@@ -141,16 +141,16 @@
             "diff": {
               ".validate": "newData.hasChildren(['0', '1', '2', '3'])",
               "0": {
-                ".validate": "newData.isNumber()"
+                ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -180 && newData.val() <= 180)))"
               },
               "1": {
-                ".validate": "newData.isNumber()"
+                ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -180 && newData.val() <= 180)))"
               },
               "2": {
-                ".validate": "newData.isNumber()"
+                ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -180 && newData.val() <= 180)))"
               },
               "3": {
-                ".validate": "newData.isNumber()"
+                ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -180 && newData.val() <= 180)))"
               },
               "$other": {
                 ".validate": false
@@ -167,7 +167,7 @@
             },
             "faults": {
               "$i": {
-                ".validate": "newData.isString() && newData.val().matches(/^[LR][0-3]$/)"
+                ".validate": "newData.isString() && newData.val().matches(/^[LR][0-3]$/) && ($dev !== 'khatwa-demo' || $i.matches(/^[0-7]$/))"
               }
             },
             "source": {
@@ -177,16 +177,16 @@
               ".validate": "newData.isString() && newData.val().length <= 32"
             },
             "demoDay": {
-              ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 365"
+              ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 365 && ($dev !== 'khatwa-demo' || false)"
             },
             "backfill": {
-              ".validate": "newData.isBoolean()"
+              ".validate": "newData.isBoolean() && ($dev !== 'khatwa-demo' || false)"
             },
             "scenario": {
-              ".validate": "newData.isString() && newData.val().length <= 32"
+              ".validate": "newData.isString() && newData.val().length <= 32 && ($dev !== 'khatwa-demo' || false)"
             },
             "ts": {
-              ".validate": "newData.isNumber() && newData.val() <= now + 60000"
+              ".validate": "newData.isNumber() && newData.val() <= now + 60000 && ($dev !== 'khatwa-demo' || newData.val() >= now - 86400000)"
             },
             "$other": {
               ".validate": false
@@ -198,7 +198,7 @@
             "ts"
           ],
           "$ev": {
-            ".write": "auth != null && !data.exists()",
+            ".write": "auth != null && auth.uid !== 'DQ65EfL8c6M52ruhV2cebwwkvtC2' && !data.exists()",
             ".validate": "newData.hasChildren(['kind', 'ts'])",
             "kind": {
               ".validate": "newData.val() === 'quickcheck' || newData.val() === 'redflag' || newData.val() === 'photo' || newData.val() === 'family_ack' || newData.val() === 'clinic_ack' || newData.val() === 'mode' || newData.val() === 'escalation' || newData.val() === 'booking' || newData.val() === 'reminder' || newData.val() === 'question' || newData.val() === 'message'"
@@ -235,7 +235,7 @@
             "ts"
           ],
           "$ph": {
-            ".write": "auth != null && !data.exists()",
+            ".write": "auth != null && auth.uid !== 'DQ65EfL8c6M52ruhV2cebwwkvtC2' && !data.exists()",
             ".validate": "newData.hasChildren(['role', 'jpeg', 'ts'])",
             "role": {
               ".validate": "newData.val() === 'base' || newData.val() === 'today'"
