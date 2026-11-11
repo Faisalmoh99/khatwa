@@ -114,7 +114,9 @@ export function Assistant() {
 
   // Guided tour, Rafiq step: the sentence is typed in, then sent for real (red flag → clinic), once.
   const sendRef = useRef(send);
-  sendRef.current = send;
+  useEffect(() => {
+    sendRef.current = send;
+  });
   useEffect(() => {
     const t = useTour.getState();
     if (!t.active || !t.autoSend || !t.draft) return;

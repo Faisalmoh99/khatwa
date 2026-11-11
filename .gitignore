@@ -24,3 +24,4 @@ tools/video/frame-flow/
 tools/video/raw-16x9/
 tools/video/frame-16x9/
 tools/video/tmp-16x9/
+tools/video/*-log.txt
