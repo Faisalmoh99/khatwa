@@ -2,6 +2,7 @@ import { ChevronLeft, Loader2, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/cn';
+import { useDevice } from '@/store/device';
 import { endTour, TOUR_STEPS, useTour } from '@/store/tour';
 
 /** The step card. Rendered by AppShell above the bottom navigation while the tour is on. */
@@ -9,11 +10,12 @@ export function TourCard({ aboveNav }: { aboveNav: boolean }) {
   const active = useTour((s) => s.active);
   const step = useTour((s) => s.step);
   const nav = useNavigate();
+  const redSent = useDevice((d) => d.events.some((e) => e.kind === 'redflag'));
   if (!active) return null;
   const cur = TOUR_STEPS[step];
   if (!cur) return null;
   const last = step === TOUR_STEPS.length - 1;
-  const waiting = cur.action !== 'none';
+  const waiting = cur.action !== 'none' || (cur.id === 'rafiq' && !redSent);
   const finish = () => nav(endTour(), { replace: true });
 
   return (
@@ -49,7 +51,8 @@ export function TourCard({ aboveNav }: { aboveNav: boolean }) {
         <p className="text-base leading-relaxed text-ink">{cur.body}</p>
         {waiting ? (
           <p className="flex items-center gap-2 text-base font-semibold text-brand-700" role="status">
-            <Loader2 className="size-5 animate-spin" aria-hidden /> القياس شغّال (محاكاة)…
+            <Loader2 className="size-5 animate-spin" aria-hidden />{' '}
+            {cur.action !== 'none' ? 'القياس شغّال (محاكاة)…' : 'رفيق يقرأ الرسالة…'}
           </p>
         ) : (
           <Button

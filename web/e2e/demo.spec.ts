@@ -114,16 +114,19 @@ test('«جرّب السيناريو»: scan, day 1 yellow, day 2 orange, family,
 
   await expect(card).toHaveAttribute('data-step', 'rafiq');
   await expect(page).toHaveURL(/\/assistant/);
-  const input = page.getByRole('textbox');
-  await expect(input).toHaveValue('رجلي متورمة وفيها شي ينز');
-  await page.getByRole('button', { name: /أرسل/ }).click();
-  await expect(page.getByTestId('chat')).toContainText(/العيادة/);
+  // The step sends the patient's sentence by itself (one story): no tap needed, «التالي» waits for it.
+  await expect(page.getByTestId('chat')).toContainText('رجلي متورمة وفيها شي ينز', { timeout: 10_000 });
+  await expect(page.getByTestId('chat').locator('li').last()).toContainText('العيادة', { timeout: 15_000 });
+  await expect(page.getByRole('textbox')).toHaveValue('');
   await shot(page, 'd4-tour-6-rafiq');
   await next.click();
 
+  // Clinic: Abu Saad is red and first (red outranks every orange).
   await expect(card).toHaveAttribute('data-step', 'clinic');
   await expect(page).toHaveURL(/\/clinic$/);
   await expect(page.getByTestId('patient-real')).toHaveAttribute('data-level', 'red');
+  await expect(page.getByTestId('patient-real')).toContainText('أبو سعد');
+  await expect(page.getByTestId('patients').locator('li').first()).toContainText('أبو سعد');
   await shot(page, 'd4-tour-7-clinic');
   await next.click();
 

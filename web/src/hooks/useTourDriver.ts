@@ -26,7 +26,8 @@ export function useTourDriver() {
     if (ran.current === key) return;
     ran.current = key;
     if (useSettings.getState().role !== cur.role) useSettings.getState().set({ role: cur.role });
-    useTour.getState().set({ draft: cur.id === 'rafiq' ? TOUR_RAFIQ_TEXT : '' });
+    const rafiq = cur.id === 'rafiq';
+    useTour.getState().set({ draft: rafiq ? TOUR_RAFIQ_TEXT : '', autoSend: rafiq });
     nav(cur.route);
     const day = SCAN_DAY[cur.action];
     if (day)

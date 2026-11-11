@@ -100,7 +100,7 @@ export const TOUR_STEPS: TourStep[] = [
     action: 'none',
     top: true,
     title: 'رفيق',
-    body: 'كتبنا لك جملة مثل ما يكتب المريض. اضغط إرسال: علامة الخطر تقلب المستوى أحمر.',
+    body: 'المريض كتب لرفيق «رجلي متورمة وفيها شي ينز». رفيق فهم علامة الخطر، فصار المستوى أحمر وانبلغت العيادة.',
   },
   {
     id: 'clinic',
@@ -126,26 +126,31 @@ interface TourState {
   saved: { settings: SavedSettings; chat: ReturnType<typeof useChat.getState>['days'] } | null;
   /** Text waiting in Rafiq's input box (the Rafiq step). Consumed by the assistant screen. */
   draft: string;
+  /** The Rafiq step: the assistant sends `draft` by itself, so the story continues (red → clinic). */
+  autoSend: boolean;
   set: (p: Partial<Omit<TourState, 'set'>>) => void;
 }
 
 export const useTour = create<TourState>()(
-  persist((set) => ({ active: false, step: 0, saved: null, draft: '', set: (p) => set(p) }), {
-    name: 'kh.tour',
-    storage: createJSONStorage(() => {
-      try {
-        return localStorage;
-      } catch {
-        const m = new Map<string, string>();
-        return {
-          getItem: (k) => m.get(k) ?? null,
-          setItem: (k, v) => void m.set(k, v),
-          removeItem: (k) => void m.delete(k),
-        };
-      }
-    }),
-    partialize: ({ active, step, saved }) => ({ active, step, saved }),
-  }),
+  persist(
+    (set) => ({ active: false, step: 0, saved: null, draft: '', autoSend: false, set: (p) => set(p) }),
+    {
+      name: 'kh.tour',
+      storage: createJSONStorage(() => {
+        try {
+          return localStorage;
+        } catch {
+          const m = new Map<string, string>();
+          return {
+            getItem: (k) => m.get(k) ?? null,
+            setItem: (k, v) => void m.set(k, v),
+            removeItem: (k) => void m.delete(k),
+          };
+        }
+      }),
+      partialize: ({ active, step, saved }) => ({ active, step, saved }),
+    },
+  ),
 );
 
 /** Starts the tour: saves the visitor's state and switches to a fresh simulated device. */
@@ -172,6 +177,7 @@ export function startTour() {
     step: 0,
     saved: { settings: saved, chat: useChat.getState().days },
     draft: '',
+    autoSend: false,
   });
   useChat.setState({ days: {} });
   useSettings.getState().set({
@@ -199,7 +205,7 @@ export function endTour(): string {
   } catch {
     /* ignore */
   }
-  useTour.getState().set({ active: false, step: 0, saved: null, draft: '' });
+  useTour.getState().set({ active: false, step: 0, saved: null, draft: '', autoSend: false });
   return '/';
 }
 

@@ -112,6 +112,21 @@ export function Assistant() {
 
   const mic = useSpeechInput((t) => void send({ text: t }));
 
+  // Guided tour, Rafiq step: the sentence is typed in, then sent for real (red flag → clinic), once.
+  const sendRef = useRef(send);
+  sendRef.current = send;
+  useEffect(() => {
+    const t = useTour.getState();
+    if (!t.active || !t.autoSend || !t.draft) return;
+    const timer = setTimeout(() => {
+      const { draft } = useTour.getState();
+      useTour.getState().set({ autoSend: false, draft: '' });
+      setText('');
+      void sendRef.current({ text: draft });
+    }, 1400);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <AppShell
       title="رفيق"
