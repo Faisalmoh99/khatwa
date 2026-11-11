@@ -167,6 +167,13 @@ export class SimulationSource implements DataSource {
     this.endScan();
   }
 
+  /** The patient steps off after an error (or presses "أعد القياس"): back to idle. */
+  release() {
+    if (this.sess) return;
+    if (this.idleTimer) clearTimeout(this.idleTimer);
+    this.setLive(idle());
+  }
+
   /** Replaces the history with a 30-day scenario (every scan is marked backfill + scenario). */
   loadDays(scenarioId: string) {
     const scn = DAYS_SCENARIOS.find((s) => s.id === scenarioId) ?? DAYS_SCENARIOS[0]!;
@@ -229,7 +236,8 @@ export class SimulationSource implements DataSource {
           progress: 0,
           elapsedSec: s.t,
         });
-        return this.endScan();
+        // Like the real mat: the one-foot error stays until the patient steps off (release()).
+        return this.endScan({ hold: true });
       }
       s.settle = Math.max(0, s.settle - 4);
       s.hist = [];
@@ -304,10 +312,11 @@ export class SimulationSource implements DataSource {
     }
   }
 
-  private endScan() {
+  private endScan({ hold = false }: { hold?: boolean } = {}) {
     if (this.tickTimer) clearInterval(this.tickTimer);
     this.tickTimer = null;
     this.sess = null;
+    if (hold) return;
     this.idleTimer = setTimeout(() => {
       if (!this.sess) this.setLive(idle());
     }, 6 * this.tickMs);

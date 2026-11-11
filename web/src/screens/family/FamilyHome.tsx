@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHint, CardTitle } from '@/components/ui/card';
 import { ladderText } from '@/lib/ladder';
 import { ago } from '@/lib/format';
+import { familyEmptyText } from '@/lib/words';
 import { telLink, whatsappLink } from '@/lib/whatsapp';
 import { serverNow, useDevice, writeEvent } from '@/store/device';
 import { useRealPatient } from '@/store/patients';
@@ -79,7 +80,7 @@ export function FamilyHome() {
       <Card className="grid gap-2">
         <CardTitle>التنبيهات</CardTitle>
         <CardHint>اللي وصلك من خطوة عن قريبك.</CardHint>
-        <EventList events={alerts} empty="ما وصلك أي تنبيه. الحمد لله." />
+        <EventList events={alerts} empty={familyEmptyText(p.today.level)} />
       </Card>
       <p className="text-center text-sm text-mute">خطوة أداة مراقبة تساعد على الإحالة، مو تشخيص.</p>
     </AppShell>

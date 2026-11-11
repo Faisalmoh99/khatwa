@@ -67,7 +67,7 @@ export function PatientDetail() {
         )}
       </Card>
 
-      <LadderCard state={p.ladder} audience="other" />
+      <LadderCard state={p.ladder} audience="other" level={p.today.level} />
 
       <div className="grid grid-cols-2 gap-3">
         <Button size="lg" asChild>

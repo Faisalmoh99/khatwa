@@ -1,14 +1,18 @@
 import { LADDER_STEPS, type LadderState, ladderText } from '@/lib/ladder';
 import { cn } from '@/lib/cn';
+import type { FinalLevel } from '@/lib/level';
 import { Card, CardTitle } from '@/components/ui/card';
 
 /** The 4-step adherence ladder with the current step highlighted. */
 export function LadderCard({
   state,
   audience = 'patient',
+  level,
 }: {
   state: LadderState;
   audience?: 'patient' | 'other';
+  /** Today's final level: "ممتاز" is never shown on an orange or red day. */
+  level?: FinalLevel;
 }) {
   return (
     <Card className="grid gap-3" data-testid="ladder">
@@ -41,7 +45,7 @@ export function LadderCard({
         })}
       </ol>
       <p className="text-base text-ink-2" data-testid="ladder-text">
-        {ladderText(state, audience)}
+        {ladderText(state, audience, level)}
       </p>
     </Card>
   );

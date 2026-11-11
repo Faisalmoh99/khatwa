@@ -1,6 +1,7 @@
 import { expect, test } from 'vitest';
 import type { KhEvent, Scan } from '@/data/types';
 import { buildPatient, orderPatients, virtualPatients } from './patients';
+import { coverageNote } from './quality';
 import { buildReport } from './report';
 
 const DAY = 86_400_000;
@@ -69,4 +70,41 @@ test('summary payload has numbers and reasons only, and the template fallback re
   const t = templateSummary(r);
   expect(t).toContain('3 أيام');
   expect(t).toContain('الالتزام 100%');
+});
+
+test('demo mode: the family/clinic/report patient follows demo days like the patient screens', () => {
+  const now = T0 + 1000 * 60;
+  const since = T0 - 1000;
+  // Two hot scans minutes apart (same real day). Demo mode = one day each → orange.
+  const hot = [
+    { ...scan(0, 2.6), id: 'a' },
+    { ...scan(0, 2.7), id: 'b', ts: T0 + 30_000 },
+  ];
+  const base = { id: 'real', name: 'مريض', age: null, virtual: false, scans: hot, events: [] };
+  const real = buildPatient(base, now);
+  expect(real.today.level).toBe('yellow');
+  const demo = buildPatient(base, now, '20:00', { on: true, since });
+  expect(demo.today.level).toBe('orange');
+  expect(buildReport(demo).last.level).toBe('orange');
+  // The adherence ladder keeps the real calendar.
+  expect(demo.ladder).toEqual(real.ladder);
+});
+
+test('a faulty sensor is stated in the report and never hidden behind a green title', () => {
+  const s = { ...scan(0), L: [31, -127, 29.5, 30.5] };
+  const p = buildPatient(
+    { id: 'real', name: 'م', age: null, virtual: false, scans: [s], events: [] },
+    T0 + 1000,
+  );
+  expect(p.today.level).toBe('green');
+  expect(buildReport(p).coverage).toBe('قسنا 7 من 8 نقاط. حساس رأس المشط الأول، القدم اليسرى معطّل.');
+  expect(buildReport(buildPatient({ ...p, scans: [scan(0)] }, T0 + 1000)).coverage).toBeNull();
+});
+
+test('coverage note: several faulty sensors', () => {
+  expect(coverageNote({ faults: ['L0', 'R3'] })).toBe(
+    'قسنا 6 من 8 نقاط. حساس الإبهام، القدم اليسرى وحساس الكعب، القدم اليمنى معطّلة.',
+  );
+  expect(coverageNote({ faults: [] })).toBeNull();
+  expect(coverageNote(null)).toBeNull();
 });

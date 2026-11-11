@@ -127,6 +127,10 @@ test.describe('phase 1: patient home, scan, result', () => {
     await simScan(page, 'fault');
     await expect(page).toHaveURL(/\/result/, { timeout: 15_000 });
     await expect(page.getByTestId('result-hero')).toHaveAttribute('data-level', 'green');
+    await expect(page.getByTestId('result-coverage')).toHaveText(
+      'قسنا 7 من 8 نقاط. حساس رأس المشط الخامس، القدم اليسرى معطّل.',
+    );
+    await shot(page, '29b-result-fault', { full: true });
   });
 });
 
@@ -156,7 +160,8 @@ test.describe('phase 1: quick check, WhatsApp, device, settings', () => {
     await page.getByTestId('quick-care-done').click();
     await expect(page.getByTestId('quick-result')).toHaveAttribute('data-level', 'green');
     await open(page, '/home');
-    await expect(page.getByTestId('ladder-text')).toContainText('قست اليوم');
+    // Quick check only: counts for today, but it is not a scan (no "قست اليوم. ممتاز.").
+    await expect(page.getByTestId('ladder-text')).toHaveText('سوّيت الفحص السريع اليوم.');
   });
 
   test('WhatsApp button opens wa.me with a ready message to the saved family number', async ({ page }) => {

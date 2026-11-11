@@ -64,11 +64,29 @@ export function redFlags(text: string): { code: ReportCode; why: string }[] {
   return out;
 }
 
+/**
+ * Softer reports the templates recognise themselves (yellow, never red): the patient is asked to
+ * confirm in the quick check, same as the AI path. Negation applies ("ما فيه احمرار").
+ */
+export const SOFT: { code: ReportCode; why: string; re: RegExp }[] = [
+  { code: 'redness', why: 'احمرار', re: /(احمرار|احمرت|محمر|حمرا|(^| )حمره( |$))/ },
+];
+
+export function softReports(text: string): { code: ReportCode; why: string }[] {
+  const t = norm(text);
+  return SOFT.filter((f) => {
+    const m = t.match(f.re);
+    if (!m || m.index === undefined) return false;
+    return !NEG.test(t.slice(0, m.index + (m[0].startsWith(' ') ? 1 : 0)));
+  }).map(({ code, why }) => ({ code, why }));
+}
+
 /** Medical questions the assistant must not answer (diagnosis, treatment, medicine). */
 export const MEDICAL =
   /(هل (هذا|هذي|ده|الجرح)? ?(خطير|خطر)|وش (المرض|المشكله|اخذ)|ايش (المرض|المشكله)|دواء|ادويه|مضاد حيوي|مرهم|كريم|علاج|اتعالج|تشخيص|اشخص|حبوب)/;
 
 export type Intent =
+  | 'stop'
   | 'travel'
   | 'bandage'
   | 'hospital'
@@ -88,6 +106,8 @@ const INTENTS: [Intent, RegExp][] = [
   ['now', /(وش اسوي|ايش اسوي|ماذا افعل|وش المطلوب)/],
   ['care', /(اعتني|العنايه|عنايه|انظف|اغسل|نصايح|نصيحه)/],
   ['doc', /(متي (اراجع|اروح|ازور)|اراجع الطبيب|اروح المستشفي)/],
+  // "Stop the alerts": never switched off from chat; pointed to travel mode in settings.
+  ['stop', /(وقف|اوقف|ايقاف|طفي|اطفي|بطل|الغ|لا ترسل|ما ابي).*(تنبيه|اشعار|تذكير|رسايل)/],
   ['travel', /(سفر|مسافر|سافرت|رحله|برا البلد)/],
   ['bandage', /(ضماد|جبيره|جبس|مغطي|لفاف)/],
   ['hospital', /(مستشفي|تنويم|منوم|عمليه|اتنوم)/],

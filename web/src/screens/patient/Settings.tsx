@@ -10,6 +10,7 @@ import { SwitchRow } from '@/components/ui/switch';
 import type { SourceKind } from '@/data/DataSource';
 import { DEFAULT_DEVICE_ID } from '@/data/firebase-config';
 import { SerialSource, serialSupported } from '@/data/SerialSource';
+import { toLatinDigits } from '@/lib/format';
 import { MODE_AR, type Mode, modeAt } from '@/lib/level';
 import { normalizeSaudiPhone } from '@/lib/whatsapp';
 import { serverNow, useDevice, writeEvent } from '@/store/device';
@@ -109,7 +110,7 @@ export function Settings() {
               dir="ltr"
               inputMode="tel"
               value={s.familyPhone}
-              onChange={(e) => s.set({ familyPhone: e.target.value })}
+              onChange={(e) => s.set({ familyPhone: toLatinDigits(e.target.value) })}
               placeholder="05XXXXXXXX"
               aria-invalid={!famPhoneOk}
               data-testid="family-phone"
@@ -142,7 +143,7 @@ export function Settings() {
             dir="ltr"
             inputMode="tel"
             value={s.patientPhone}
-            onChange={(e) => s.set({ patientPhone: e.target.value })}
+            onChange={(e) => s.set({ patientPhone: toLatinDigits(e.target.value) })}
             placeholder="05XXXXXXXX"
           />
         </Section>
@@ -309,8 +310,9 @@ export function Settings() {
             أداة مراقبة تساعد على الإحالة، مو تشخيص. النموذج ما اختُبر سريريًا.
           </p>
           <p>
-            المساعد يرد بقوالب ثابتة مكتوبة مسبقًا، ولا يشخّص ولا يصف دواء. استُخدم الذكاء الاصطناعي (Claude)
-            في كتابة أجزاء من الكود.
+            المساعد يرد بقوالب ثابتة مكتوبة مسبقًا، ولا يشخّص ولا يصف دواء. الذكاء الاصطناعي (Claude Haiku)
+            يفهم كلام المريض الحر بس، ويحوّله لواحد من بلاغات ثابتة. الرد من القوالب، والقرار من القاعدة،
+            والذكاء الاصطناعي ما يغيّر مستوى الخطر. واستُخدم Claude كذلك في كتابة أجزاء من الكود.
           </p>
           <p className="text-sm text-mute">
             فريق خطوة · MEDATHON 2026 · النسخة <span className="num">0.2.0</span> ·{' '}

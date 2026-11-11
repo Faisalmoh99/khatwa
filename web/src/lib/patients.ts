@@ -6,6 +6,7 @@ import { DAYS_SCENARIOS, generateDays } from '@/data/sim/scenarios';
 import type { KhEvent, Photo, Scan } from '@/data/types';
 import { priority, type Priority } from './agent/priority';
 import { ladderState, type LadderState } from './ladder';
+import { withDemoDays } from './demo';
 import { buildDayViews, type DayView } from './level';
 import { buildDays, DAY_MS, evaluate, type EvaluatedDay } from './rules/rules';
 
@@ -36,11 +37,16 @@ export function buildPatient(
   },
   now: number,
   reminderTime = '20:00',
+  demo: { on: boolean; since: number | null } = { on: false, since: null },
 ): PatientModel {
-  const days = evaluate(buildDays(p.scans));
-  const views = buildDayViews(days, p.events, { now, demo: false });
+  // Same split as the patient's own screens (store/selectors.ts): the level follows demo mode,
+  // the adherence ladder always uses the real calendar.
+  const realDays = evaluate(buildDays(p.scans));
+  const realViews = buildDayViews(realDays, p.events, { now, demo: false });
+  const days = demo.on ? evaluate(buildDays(withDemoDays(p.scans, demo.since), { mode: 'demo' })) : realDays;
+  const views = demo.on ? buildDayViews(days, p.events, { now, demo: true }) : realViews;
   const today = views.at(-1)!;
-  const ladder = ladderState(views, p.events, now, reminderTime);
+  const ladder = ladderState(realViews, p.events, now, reminderTime);
   const recent = (e: KhEvent) => now - e.ts < 3 * DAY_MS;
   const t = today.thermal;
   const site = t?.alertSites[0] ?? t?.check.flagged[0];

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardTitle } from '@/components/ui/card';
 import { arDate, clock } from '@/lib/format';
 import { focusSite, nextSteps } from '@/lib/level';
+import { coverageNote } from '@/lib/quality';
 import { useDayViews } from '@/store/selectors';
 import { useSettings } from '@/store/settings';
 
@@ -18,6 +19,7 @@ export function Result() {
   const view = (q.get('day') && views.find((v) => v.key === q.get('day'))) || views.at(-1)!;
   const scan = view.thermal?.scan;
   const focus = focusSite(view);
+  const coverage = view.thermal ? coverageNote(view.thermal.check) : null;
   const isSim = scan?.source === 'sim' || scan?.backfill === true;
 
   return (
@@ -48,6 +50,14 @@ export function Result() {
             </li>
           ))}
         </ul>
+        {coverage && (
+          <p
+            className="rounded border border-lv-yellow bg-lv-yellow-soft px-3 py-2 text-base font-semibold text-lv-yellow-ink"
+            data-testid="result-coverage"
+          >
+            {coverage}
+          </p>
+        )}
         {scan && (
           <FootMap
             L={scan.L as number[]}

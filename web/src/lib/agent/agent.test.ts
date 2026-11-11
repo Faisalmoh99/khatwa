@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { priority } from './priority';
 import { answer, type ChatContext, FIXED_MED, opener, reply } from './templates';
-import { intent, norm, redFlags } from './understand';
+import { intent, norm, redFlags, softReports } from './understand';
 
 const ctx = (p: Partial<ChatContext> = {}): ChatContext => ({
   level: 'green',
@@ -167,5 +167,48 @@ describe('priority (no photo/pressure/perfusion items)', () => {
       unresponsive: true,
     });
     expect(p.parts.map((x) => x.label).join()).not.toMatch(/صورة|ضغط|تروية/);
+  });
+});
+
+describe('templates: redness words and "stop the alerts"', () => {
+  test.each(['رجلي حمرا', 'أصابعي محمرة', 'قدمي احمرت من أمس', 'فيه احمرار خفيف'])(
+    '%s → redness, asks to confirm in the quick check (never red)',
+    (text) => {
+      expect(softReports(text).map((f) => f.code)).toEqual(['redness']);
+      const r = reply({ text }, ctx());
+      expect(r.msgs[0]!.tone).not.toBe('urgent');
+      expect(r.msgs[0]!.text).toContain('احمرار');
+      expect(r.msgs[0]!.replies).toContain('check');
+      expect(r.effects.some((e) => e.type === 'event' && e.event.kind === 'redflag')).toBe(false);
+      expect(r.effects).toContainEqual({
+        type: 'event',
+        event: expect.objectContaining({
+          kind: 'message',
+          data: expect.objectContaining({ heard: 'احمرار' }),
+        }),
+      });
+    },
+  );
+  test('negated redness does not count', () => {
+    expect(softReports('ما فيه احمرار')).toEqual([]);
+  });
+  test('the level word "أحمر" is not redness', () => {
+    expect(softReports('ليش مستواي أحمر')).toEqual([]);
+  });
+  test.each(['وقف التنبيهات', 'أبي أوقف التذكير', 'لا ترسل لي تنبيهات', 'طفي الإشعارات'])(
+    '%s → points to travel mode in settings, nothing switched off',
+    (text) => {
+      expect(intent(text)).toBe('stop');
+      const r = reply({ text }, ctx());
+      expect(r.msgs[0]!.text).toContain('وضع السفر');
+      expect(r.msgs[0]!.replies).toContain('settings:modes');
+      expect(r.effects.some((e) => e.type === 'event' && e.event.kind === 'mode')).toBe(false);
+    },
+  );
+  test('the settings button opens the special modes section', () => {
+    expect(reply({ id: 'settings:modes' }, ctx()).effects).toContainEqual({
+      type: 'goto',
+      to: '/settings#modes',
+    });
   });
 });

@@ -7,6 +7,7 @@
  *   1 day missed → patient reminder · 2 days → family · 3 days (then every 3) → clinic
  * Family alerts only with the family consent. Pause modes stop everything except red.
  */
+import { dayWord } from './format';
 import type { KhEvent } from '@/data/types';
 import type { LadderState } from './ladder';
 import type { DayView } from './level';
@@ -64,7 +65,7 @@ export function dueEscalations(
       if (familyConsent && prev?.level !== 'orange' && prev?.level !== 'red')
         add({ to: 'family', level: 3, reason: 'thermal', why, day });
       if (run >= 3)
-        add({ to: 'clinic', level: 4, reason: 'thermal_persist', why: `${why} (منذ ${run} أيام)`, day });
+        add({ to: 'clinic', level: 4, reason: 'thermal_persist', why: `${why} (منذ ${dayWord(run)})`, day });
     } else if (!ladder.paused && today.level === 'yellow') {
       add({ to: 'patient', level: 1, reason: 'watch', why, day });
     }

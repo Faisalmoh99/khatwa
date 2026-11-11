@@ -2,6 +2,7 @@ import { KeyRound, Phone } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { toLatinDigits } from '@/lib/format';
 import { normalizeSaudiPhone } from '@/lib/whatsapp';
 import { useSettings } from '@/store/settings';
 
@@ -15,6 +16,7 @@ export function Login() {
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [otp, setOtp] = useState('');
   const [err, setErr] = useState('');
+  const [phoneErr, setPhoneErr] = useState('');
   const valid = normalizeSaudiPhone(phone) !== null;
 
   return (
@@ -40,6 +42,7 @@ export function Login() {
           onSubmit={(e) => {
             e.preventDefault();
             if (valid) setStep('otp');
+            else setPhoneErr('الرقم غير صحيح. اكتب رقم جوال سعودي يبدأ بـ 05، مثل 0512345678.');
           }}
         >
           <label className="grid gap-2">
@@ -55,13 +58,25 @@ export function Login() {
                 autoComplete="tel"
                 placeholder="05XXXXXXXX"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e) => (setPhone(toLatinDigits(e.target.value)), setPhoneErr(''))}
+                aria-invalid={!!phoneErr}
+                aria-describedby={phoneErr ? 'phone-err' : undefined}
                 className="min-h-touch-lg w-full rounded border-2 border-line bg-surface pe-4 ps-12 text-xl tracking-wide placeholder:text-line-strong focus:border-brand-500"
                 data-testid="login-phone"
               />
             </span>
           </label>
-          <Button size="lg" block type="submit" disabled={!valid} data-testid="login-next">
+          {phoneErr && (
+            <p
+              id="phone-err"
+              role="alert"
+              className="text-base font-semibold text-lv-red-ink"
+              data-testid="phone-err"
+            >
+              {phoneErr}
+            </p>
+          )}
+          <Button size="lg" block type="submit" disabled={!phone.trim()} data-testid="login-next">
             التالي
           </Button>
         </form>
@@ -89,7 +104,7 @@ export function Login() {
                 autoComplete="one-time-code"
                 maxLength={4}
                 value={otp}
-                onChange={(e) => (setOtp(e.target.value.replace(/\D/g, '')), setErr(''))}
+                onChange={(e) => (setOtp(toLatinDigits(e.target.value).replace(/\D/g, '')), setErr(''))}
                 className="min-h-touch-lg w-full rounded border-2 border-line bg-surface pe-4 ps-12 text-center text-3xl tracking-[0.6em] focus:border-brand-500"
                 aria-invalid={!!err}
                 aria-describedby="otp-err"

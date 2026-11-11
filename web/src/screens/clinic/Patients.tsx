@@ -24,7 +24,7 @@ export function Patients() {
       <ul className="grid gap-3" data-testid="patients">
         {list.map((p) => (
           <li key={p.id}>
-            <Link to={`/clinic/patient/${p.id}`} data-testid={`patient-${p.id}`}>
+            <Link to={`/clinic/patient/${p.id}`} data-testid={`patient-${p.id}`} data-level={p.today.level}>
               <Card className={cn('flex items-center gap-3 p-3', !p.virtual && 'border-2 border-brand-500')}>
                 <span
                   className={cn(

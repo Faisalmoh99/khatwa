@@ -3,6 +3,7 @@ import type { KhEvent } from '@/data/types';
 import { dueEscalations, unwritten } from './escalations';
 import { buildDayViews, type DayView } from './level';
 import { buildDays, evaluate, type ScanInput } from './rules/rules';
+import { familyEmptyText } from './words';
 
 const DAY = 86_400_000;
 const T0 = Date.UTC(2026, 10, 1, 5);
@@ -73,4 +74,20 @@ test('unwritten() dedupes by key so a reload never writes twice', () => {
   const d = dueEscalations(v, L0, opt);
   const written: KhEvent[] = [{ id: 'x', kind: 'escalation', ts: 1, data: { key: d[0]!.key } }];
   expect(unwritten(d, written).map((e) => e.key)).toEqual([d[1]!.key]);
+});
+
+test('clinic escalation text uses the right Arabic day word', () => {
+  const s = [0, 1, 2, 3].map((n) => scan(n, [0, 2.5 + n / 10]));
+  const clinic = dueEscalations(views(s), L0, opt).find((e) => e.to === 'clinic');
+  expect(clinic?.why).toContain('(منذ 3 أيام)');
+  const long = Array.from({ length: 12 }, (_, n) => scan(n, [0, 2.5]));
+  expect(dueEscalations(views(long), L0, opt).find((e) => e.to === 'clinic')?.why).toContain(
+    '(منذ 11 يومًا)',
+  );
+});
+
+test('family empty alert list never says "الحمد لله" on an orange or red day', () => {
+  expect(familyEmptyText('orange')).toBe('ما فيه تنبيهات جديدة.');
+  expect(familyEmptyText('red')).toBe('ما فيه تنبيهات جديدة.');
+  expect(familyEmptyText('green')).toContain('الحمد لله');
 });

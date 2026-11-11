@@ -129,6 +129,8 @@ export function Report() {
         <section
           className="break-inside-avoid rounded border-2 p-4"
           style={{ borderColor: m.fill, background: m.soft }}
+          data-testid="report-last"
+          data-level={r.last.level}
         >
           <div className="flex flex-wrap items-center gap-2">
             <StatusBadge level={r.last.level} size="lg" />
@@ -136,6 +138,11 @@ export function Report() {
           </div>
           {r.last.reasons.length > 0 && (
             <p className="mt-1 text-base text-ink">{r.last.reasons.join('، ')}</p>
+          )}
+          {r.coverage && (
+            <p className="mt-1 text-base font-semibold text-ink" data-testid="report-coverage">
+              {r.coverage}
+            </p>
           )}
         </section>
 

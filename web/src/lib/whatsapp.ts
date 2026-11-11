@@ -1,10 +1,11 @@
 /** Ready-made WhatsApp message to the family (wa.me). No API, no sending on our side. */
+import { toLatinDigits } from './format';
 import type { DayView } from './level';
 import { LEVEL_WORD } from './words';
 
-/** Saudi mobile: 05XXXXXXXX / 5XXXXXXXX / +9665XXXXXXXX / 009665XXXXXXXX → 9665XXXXXXXX. Else null. */
+/** Saudi mobile (Arabic or Latin digits): 05XXXXXXXX / 5XXXXXXXX / +9665XXXXXXXX / 009665XXXXXXXX → 9665XXXXXXXX. Else null. */
 export function normalizeSaudiPhone(raw: string): string | null {
-  const d = raw
+  const d = toLatinDigits(raw)
     .replace(/[^\d+]/g, '')
     .replace(/^\+/, '')
     .replace(/^00/, '');
@@ -38,4 +39,10 @@ export function whatsappLink(phone: string, text: string): string {
 export function telLink(phone: string): string | null {
   const p = normalizeSaudiPhone(phone);
   return p ? `tel:+${p}` : null;
+}
+
+/** "أرسل لـسعد على واتساب", or "أرسل للعائلة على واتساب" when no name is saved. */
+export function sendLabel(name: string): string {
+  const n = name.trim();
+  return n ? `أرسل لـ${n} على واتساب` : 'أرسل للعائلة على واتساب';
 }

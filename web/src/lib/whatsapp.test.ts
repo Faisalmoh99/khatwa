@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { familyMessage, normalizeSaudiPhone, telLink, whatsappLink } from './whatsapp';
+import { familyMessage, normalizeSaudiPhone, sendLabel, telLink, whatsappLink } from './whatsapp';
 
 test('normalizes Saudi mobile numbers', () => {
   expect(normalizeSaudiPhone('0551234567')).toBe('966551234567');
@@ -43,4 +43,15 @@ test('red message asks for a doctor visit within 24 hours', () => {
   expect(familyMessage({ level: 'red', reasons: [{ code: 'wound', ar: 'أبلغ عن جرح' }] })).toContain(
     'خلال 24 ساعة',
   );
+});
+
+test('Arabic-Indic digits are accepted as a Saudi number', () => {
+  expect(normalizeSaudiPhone('٠٥٥١٢٣٤٥٦٧')).toBe('966551234567');
+  expect(normalizeSaudiPhone('+٩٦٦٥٥١٢٣٤٥٦٧')).toBe('966551234567');
+  expect(normalizeSaudiPhone('٠٥٥١٢')).toBeNull();
+});
+
+test('send button label: name, or "للعائلة" (never "لـالعائلة")', () => {
+  expect(sendLabel('سعد')).toBe('أرسل لـسعد على واتساب');
+  expect(sendLabel('  ')).toBe('أرسل للعائلة على واتساب');
 });

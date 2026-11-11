@@ -141,3 +141,18 @@ export function scanProblems(check: ScanCheck): QualityMsg[] {
 }
 
 export { checkScan };
+
+/**
+ * One line when a valid scan had faulty sensors, so a green title never hides an unmeasured point:
+ * "قسنا 7 من 8 نقاط. حساس الإبهام، القدم اليسرى معطّل."  null when every point was measured.
+ */
+export function coverageNote(check: Pick<ScanCheck, 'faults'> | null | undefined): string | null {
+  const faults = check?.faults ?? [];
+  if (!faults.length) return null;
+  const names = faults.map((f) => {
+    const foot = f[0] === 'R' ? 'R' : 'L';
+    return `حساس ${SITES[Number(f.slice(1))]?.ar ?? '؟'}، القدم ${FOOT_AR[foot]}`;
+  });
+  const total = SITES.length * 2;
+  return `قسنا ${total - faults.length} من ${total} نقاط. ${names.join(' و')} ${faults.length > 1 ? 'معطّلة' : 'معطّل'}.`;
+}

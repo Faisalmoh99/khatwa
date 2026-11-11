@@ -9,21 +9,13 @@ import { AppShell } from '@/components/layout/AppShell';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ago, arDate, dayWord } from '@/lib/format';
-import { parseHHMM, riyadhMinutes } from '@/lib/ladder';
+import { parseHHMM, riyadhMinutes, streakOf } from '@/lib/ladder';
 import { MODE_AR } from '@/lib/level';
 import { serverNow, useDevice } from '@/store/device';
 import { useDayViews, useLadder } from '@/store/selectors';
 import { useSettings } from '@/store/settings';
 
 /** Consecutive measured days ending today (or yesterday if today is not done yet). */
-function streakOf(views: { done: boolean }[]): number {
-  let n = 0;
-  const list = [...views];
-  if (list.length && !list.at(-1)!.done) list.pop();
-  for (let i = list.length - 1; i >= 0 && list[i]!.done; i--) n++;
-  return n;
-}
-
 export function Home() {
   const views = useDayViews();
   const today = views.at(-1)!;
@@ -32,8 +24,8 @@ export function Home() {
   const lastScan = useDevice((s) => s.scans.at(-1));
   const loaded = useDevice((s) => s.loaded);
   const offline = useDevice((s) => !!(s.connection.retrying || s.connection.error));
-  const streak = streakOf(ladder.views);
   const now = serverNow();
+  const streak = streakOf(ladder.views, now);
   const reminderTime = useSettings((s) => s.reminderTime);
   const reminderDue = !ladder.todayDone && !ladder.paused && riyadhMinutes(now) >= parseHHMM(reminderTime);
 
@@ -132,7 +124,7 @@ export function Home() {
         <DayStrip views={demo ? views : ladder.views} demo={demo} />
       </Card>
 
-      <LadderCard state={ladder} />
+      <LadderCard state={ladder} level={today.level} />
 
       <div className="grid grid-cols-2 gap-3">
         <Button variant="soft" size="lg" asChild>

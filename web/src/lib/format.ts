@@ -74,3 +74,11 @@ export const signed = (v: number) => {
   const r = Math.round(v * 10) / 10;
   return r === 0 ? '0.0°' : `${r > 0 ? '+' : ''}${r.toFixed(1)}°`;
 };
+
+/** Arabic-Indic (٠-٩) and Persian (۰-۹) digits → Latin 0-9. Every numeric input goes through this. */
+export function toLatinDigits(s: string): string {
+  return s.replace(/[\u0660-\u0669\u06F0-\u06F9]/g, (c) => {
+    const code = c.charCodeAt(0);
+    return String(code - (code >= 0x06f0 ? 0x06f0 : 0x0660));
+  });
+}

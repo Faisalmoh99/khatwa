@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { Scan } from '@/data/types';
+import { withDemoDays } from '@/lib/demo';
 import { useNow } from '@/hooks/useNow';
 import { ladderState } from '@/lib/ladder';
 import { buildDayViews, type DayView } from '@/lib/level';
@@ -7,20 +7,7 @@ import { buildDays, evaluate, type EvaluatedDay } from '@/lib/rules/rules';
 import { serverNow, useDevice } from './device';
 import { useSettings } from './settings';
 
-/**
- * Demo mode input mapping (does not touch the rule engine):
- * the real ESP32 never writes demoDay, so scans taken after demo mode was switched on
- * get consecutive demo days, continuing after the highest explicit demoDay (e.g. from /sim/).
- */
-export function withDemoDays(scans: Scan[], demoSince: number | null): Scan[] {
-  if (demoSince === null) return scans;
-  let next = scans.reduce((m, s) => (Number.isInteger(s.demoDay) ? Math.max(m, s.demoDay!) : m), 0) + 1;
-  return [...scans]
-    .sort((a, b) => a.ts - b.ts)
-    .map((s) =>
-      Number.isInteger(s.demoDay) || s.ts < demoSince || s.backfill ? s : { ...s, demoDay: next++ },
-    );
-}
+export { withDemoDays };
 
 /** Evaluated thermal days from the real scans. Demo mode = each scan counts as one day. */
 export function useDays(): EvaluatedDay[] {

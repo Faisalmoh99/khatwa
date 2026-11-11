@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { ago, consecutiveDays, dayWord, temp } from './format';
+import { ago, consecutiveDays, dayWord, temp, toLatinDigits } from './format';
 
 describe('Arabic number words (R8)', () => {
   test('dayWord', () => {
@@ -31,4 +31,11 @@ describe('Arabic number words (R8)', () => {
 test('ltr isolates numbers for Arabic text', async () => {
   const { ltr } = await import('./format');
   expect(ltr('2.6°')).toBe('⁦2.6°⁩');
+});
+
+test('toLatinDigits converts Arabic-Indic and Persian digits', () => {
+  expect(toLatinDigits('٠٥٥١٢٣٤٥٦٧')).toBe('0551234567');
+  expect(toLatinDigits('۰۵۵۱۲۳۴۵۶۷')).toBe('0551234567');
+  expect(toLatinDigits('١٢٣٤')).toBe('1234');
+  expect(toLatinDigits('05 ٥١ abc')).toBe('05 51 abc');
 });

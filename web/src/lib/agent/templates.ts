@@ -8,7 +8,7 @@ import type { NewEvent } from '@/data/types';
 import { consecutiveDays, dayWord, ltr } from '../format';
 import type { FinalLevel, Mode } from '../level';
 import type { Status } from '../rules/rules';
-import { intent, type Intent, MEDICAL, norm, redFlags } from './understand';
+import { intent, type Intent, MEDICAL, norm, redFlags, softReports } from './understand';
 
 export type QuickReplyId =
   | 'fine'
@@ -32,7 +32,8 @@ export type QuickReplyId =
   | 'mode:travel'
   | 'mode:bandage'
   | 'mode:hospital'
-  | 'mode:normal';
+  | 'mode:normal'
+  | 'settings:modes';
 
 export const QR: Record<QuickReplyId, string> = {
   fine: 'كل شي تمام',
@@ -57,6 +58,7 @@ export const QR: Record<QuickReplyId, string> = {
   'mode:bandage': 'فعّل وضع الضماد',
   'mode:hospital': 'أوقف التنبيهات',
   'mode:normal': 'رجّعني للوضع العادي',
+  'settings:modes': 'افتح وضع السفر في الإعدادات',
 };
 
 export interface BotMsg {
@@ -239,14 +241,15 @@ export function reply(
       return { msgs, effects };
     }
     id = intent(text);
-    if (!id && confirm) {
+    const heard = confirm ?? softReports(text)[0]?.why ?? null;
+    if (!id && heard) {
       msgs.push(
         bot(
-          `فهمت إنك تحس بـ${confirm}. عشان ينسجل صح، جاوب على الفحص السريع (ثلاث أسئلة). وإذا فيه جرح أو سائل اضغط «عندي جرح أو سائل».`,
+          `فهمت إنك تحس بـ${heard}. عشان ينسجل صح، جاوب على الفحص السريع (ثلاث أسئلة). وإذا فيه جرح أو سائل اضغط «عندي جرح أو سائل».`,
           ['check', 'wound'],
         ),
       );
-      ev({ kind: 'message', data: { text: text.slice(0, 200), heard: confirm } });
+      ev({ kind: 'message', data: { text: text.slice(0, 200), heard } });
       return { msgs, effects };
     }
     if (!id) {
@@ -292,6 +295,18 @@ export function reply(
       break;
     case 'tired':
       msgs.push(bot('سلامتك. اليوم يكفي الفحص السريع (ثلاث نقرات) بدل القياس الكامل.', ['check']));
+      break;
+    case 'stop':
+      msgs.push(
+        bot(
+          'التنبيهات لسلامتك، فما نوقفها من المحادثة. إذا بتغيب عن السجادة (سفر مثلًا)، فعّل «وضع السفر» من الإعدادات: يوقف التذكيرات مؤقتًا، ويكفيك الفحص السريع كل يوم.',
+          ['settings:modes', 'no'],
+        ),
+      );
+      break;
+    case 'settings:modes':
+      msgs.push(bot('فتحت لك الإعدادات على «وضع خاص».'));
+      effects.push({ type: 'goto', to: '/settings#modes' });
       break;
     case 'travel':
       msgs.push(

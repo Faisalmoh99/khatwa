@@ -9,3 +9,8 @@ export const LEVEL_WORD: Record<FinalLevel, string> = {
   none: 'بدون قراءة',
   paused: 'متوقف مؤقتًا',
 };
+
+/** Family alert list with no entries: never "الحمد لله" while today is orange or red. */
+export function familyEmptyText(level: FinalLevel): string {
+  return level === 'orange' || level === 'red' ? 'ما فيه تنبيهات جديدة.' : 'ما وصلك أي تنبيه. الحمد لله.';
+}

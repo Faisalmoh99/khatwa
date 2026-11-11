@@ -3,6 +3,7 @@ import type { KhEvent, Photo } from '@/data/types';
 import { dayWord } from './format';
 import { type FinalLevel, focusSite } from './level';
 import type { PatientModel } from './patients';
+import { coverageNote } from './quality';
 import { SITES } from './rules/rules';
 
 export interface Episode {
@@ -34,6 +35,8 @@ export interface ReportData {
   escalations: number;
   photos: { base: Photo | null; today: Photo | null };
   last: { level: FinalLevel; reasons: string[] };
+  /** Faulty sensors in the latest scan of the period ("قسنا 7 من 8 نقاط..."), or null. */
+  coverage: string | null;
 }
 
 export function buildReport(p: PatientModel, periodDays = 30): ReportData {
@@ -118,6 +121,7 @@ export function buildReport(p: PatientModel, periodDays = 30): ReportData {
     escalations: p.events.filter((e) => e.kind === 'escalation' && inPeriod(e)).length,
     photos: { base: photosBase, today: photosToday },
     last: { level: today?.level ?? 'none', reasons: today?.reasons.map((r) => r.ar) ?? [] },
+    coverage: coverageNote([...views].reverse().find((v) => v.thermal)?.thermal?.check),
   };
 }
 

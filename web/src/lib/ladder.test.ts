@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest';
 import type { KhEvent } from '@/data/types';
 import { buildDayViews } from './level';
-import { ladderState, ladderText, riyadhMinutes } from './ladder';
+import { ladderState, ladderText, riyadhMinutes, streakOf } from './ladder';
 import { buildDays, evaluate, type ScanInput } from './rules/rules';
 
 const DAY = 86_400_000;
@@ -65,16 +65,73 @@ test('no measurement ever = fresh start', () => {
 
 test('ladder text uses correct Arabic', () => {
   expect(
-    ladderText({ step: 3, missed: 2, paused: false, mode: 'normal', fresh: false, todayDone: false }),
+    ladderText({
+      step: 3,
+      missed: 2,
+      paused: false,
+      mode: 'normal',
+      fresh: false,
+      todayDone: false,
+      todayScanned: false,
+    }),
   ).toContain('يومين');
   expect(
-    ladderText({ step: 4, missed: 3, paused: false, mode: 'normal', fresh: false, todayDone: false }),
+    ladderText({
+      step: 4,
+      missed: 3,
+      paused: false,
+      mode: 'normal',
+      fresh: false,
+      todayDone: false,
+      todayScanned: false,
+    }),
   ).toContain('3 أيام');
 });
 
 test('family and clinic get third-person ladder text', () => {
-  const base = { paused: false, mode: 'normal' as const, fresh: false, todayDone: false };
+  const base = {
+    paused: false,
+    mode: 'normal' as const,
+    fresh: false,
+    todayDone: false,
+    todayScanned: false,
+  };
   expect(ladderText({ ...base, step: 3, missed: 2 }, 'other')).toBe('يومين بدون قياس.');
   expect(ladderText({ ...base, step: 1, missed: 0, fresh: true }, 'other')).toBe('ما بدأ القياس بعد.');
   expect(ladderText({ ...base, step: 4, missed: 3 }, 'other')).toContain('أُبلغت العيادة');
+});
+
+test('ladder text: "ممتاز" only for a real scan today, never on orange or red', () => {
+  const base = { paused: false, mode: 'normal' as const, fresh: false, step: 1 as const, missed: 0 };
+  const scanned = { ...base, todayDone: true, todayScanned: true };
+  expect(ladderText(scanned, 'patient', 'green')).toBe('قست اليوم. ممتاز.');
+  expect(ladderText(scanned, 'patient', 'orange')).toBe('قست اليوم.');
+  expect(ladderText(scanned, 'patient', 'red')).toBe('قست اليوم.');
+  const quickOnly = { ...base, todayDone: true, todayScanned: false };
+  expect(ladderText(quickOnly, 'patient', 'green')).toBe('سوّيت الفحص السريع اليوم.');
+  expect(ladderText(quickOnly, 'other')).toBe('سوّى الفحص السريع اليوم.');
+  expect(ladderText({ ...base, todayDone: false, todayScanned: false })).toContain('قِس اليوم');
+});
+
+test('todayScanned: quick check alone does not count as a scan', () => {
+  const now = at(2, 10);
+  const quick: KhEvent = {
+    id: 'q',
+    kind: 'quickcheck',
+    ts: at(2, 9),
+    data: { skin: 'ok', pain: 'ok', care: 'done' },
+  };
+  const views = buildDayViews(evaluate(buildDays([0, 1].map(scan))), [quick], { now, demo: false });
+  expect(ladderState(views, [quick], now)).toMatchObject({ todayDone: true, todayScanned: false });
+  expect(state([0, 1, 2], now)).toMatchObject({ todayDone: true, todayScanned: true });
+});
+
+test('streak counts consecutive days ending today or yesterday, 0 when broken', () => {
+  const views = (days: number[], now: number) =>
+    buildDayViews(evaluate(buildDays(days.map(scan))), [], { now, demo: false });
+  expect(streakOf(views([0, 1, 2], at(2, 10)), at(2, 10))).toBe(3);
+  expect(streakOf(views([0, 1, 2], at(3, 10)), at(3, 10))).toBe(3); // today not done yet
+  expect(streakOf(views([0, 1, 2], at(4, 10)), at(4, 10))).toBe(0); // last scan before yesterday
+  expect(streakOf(views([0, 1, 3, 4], at(4, 10)), at(4, 10))).toBe(2); // gap breaks the run
+  expect(streakOf(views([], at(4, 10)), at(4, 10))).toBe(0);
 });

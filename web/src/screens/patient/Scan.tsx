@@ -23,7 +23,8 @@ function useStickyMessages(current: QualityMsg[], phase: string | undefined): Qu
   return [
     ...current,
     ...Object.values(kept)
-      .filter((x) => x.until > now && !shown.has(x.m.code))
+      // Errors are held by the live phase itself (until the patient steps off), never by a timer.
+      .filter((x) => x.until > now && !shown.has(x.m.code) && x.m.tone !== 'error')
       .map((x) => x.m),
   ];
 }
@@ -81,8 +82,18 @@ export function Scan() {
     if (phase === 'placing') window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [phase]);
   const measuring = phase === 'placing' || phase === 'settling';
-  const msgs = useStickyMessages(liveMessages(live), live?.phase);
-  const retry = () => setDismissed(fresh?.id ?? null);
+  const sticky = useStickyMessages(liveMessages(live), live?.phase);
+  // A live error (one foot, stepped off) stays on screen until the mat goes idle (the patient
+  // stepped off) or the patient presses "أعد القياس".
+  const [errHidden, setErrHidden] = useState(false);
+  if (errHidden && phase !== 'error') setErrHidden(false); // a new error shows again
+  const liveError = phase === 'error' && !fresh && !errHidden;
+  const msgs = phase === 'error' && errHidden ? [] : sticky;
+  const retry = () => {
+    if (fresh) return setDismissed(fresh.id);
+    setErrHidden(true);
+    (useDevice.getState().source as { release?: () => void } | null)?.release?.();
+  };
 
   return (
     <AppShell nav={PATIENT_NAV} title="الفحص">
@@ -142,7 +153,7 @@ export function Scan() {
         )}
       </Card>
 
-      {fresh && !ok && (
+      {((fresh && !ok) || liveError) && (
         <Button size="lg" block onClick={retry} data-testid="scan-retry">
           أعد القياس
         </Button>
