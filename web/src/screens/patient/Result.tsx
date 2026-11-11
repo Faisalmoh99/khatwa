@@ -38,7 +38,12 @@ export function Result() {
         )}
       </div>
 
-      <LevelHero level={view.level} testId="result-hero" />
+      <LevelHero
+        level={view.level}
+        // Never "قدماك اليوم سليمة" when a point was not measured.
+        title={coverage && view.level === 'green' ? 'ما فيه فرق في النقاط اللي قسناها' : undefined}
+        testId="result-hero"
+      />
 
       <Card className="grid gap-3">
         <CardTitle>ليش؟</CardTitle>

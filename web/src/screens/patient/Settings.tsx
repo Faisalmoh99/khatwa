@@ -172,22 +172,42 @@ export function Settings() {
         </Section>
       )}
 
-      <Section
-        id="consents"
-        title="الموافقات"
-        hint="العيادة تستلم التنبيهات دائمًا لأن الخدمة ما تشتغل بدونها."
-      >
-        <SwitchRow
-          label="حفظ صور القدم للعيادة"
-          checked={s.consents.photos}
-          onCheckedChange={(v) => s.set({ consents: { ...s.consents, photos: v } })}
-        />
-        <SwitchRow
-          label="مشاركة التنبيهات مع العائلة"
-          checked={s.consents.family}
-          onCheckedChange={(v) => s.set({ consents: { ...s.consents, family: v } })}
-        />
-      </Section>
+      {patient ? (
+        <Section
+          id="consents"
+          title="الموافقات"
+          hint="العيادة تستلم التنبيهات دائمًا لأن الخدمة ما تشتغل بدونها."
+        >
+          <SwitchRow
+            label="حفظ صور القدم للعيادة"
+            checked={s.consents.photos}
+            onCheckedChange={(v) => s.set({ consents: { ...s.consents, photos: v } })}
+          />
+          <SwitchRow
+            label="مشاركة التنبيهات مع العائلة"
+            checked={s.consents.family}
+            onCheckedChange={(v) => s.set({ consents: { ...s.consents, family: v } })}
+          />
+        </Section>
+      ) : (
+        <Section id="consents" title="موافقات المريض" hint="للاطلاع فقط. المريض وحده يغيّرها من حسابه.">
+          <dl className="grid gap-2 text-base" data-testid="consents-readonly">
+            {(
+              [
+                ['حفظ صور القدم للعيادة', s.consents.photos],
+                ['مشاركة التنبيهات مع العائلة', s.consents.family],
+              ] as const
+            ).map(([label, on]) => (
+              <div key={label} className="flex items-center justify-between gap-4 py-1">
+                <dt className="text-ink">{label}</dt>
+                <dd className={on ? 'font-semibold text-lv-green-ink' : 'font-semibold text-mute'}>
+                  {on ? 'موافق' : 'غير موافق'}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </Section>
+      )}
 
       {patient && (
         <Section id="voice" title="الصوت">

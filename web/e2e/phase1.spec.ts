@@ -127,6 +127,8 @@ test.describe('phase 1: patient home, scan, result', () => {
     await simScan(page, 'fault');
     await expect(page).toHaveURL(/\/result/, { timeout: 15_000 });
     await expect(page.getByTestId('result-hero')).toHaveAttribute('data-level', 'green');
+    await expect(page.getByTestId('result-hero')).toContainText('ما فيه فرق في النقاط اللي قسناها');
+    await expect(page.getByTestId('result-hero')).not.toContainText('سليمة');
     await expect(page.getByTestId('result-coverage')).toHaveText(
       'قسنا 7 من 8 نقاط. حساس رأس المشط الخامس، القدم اليسرى معطّل.',
     );

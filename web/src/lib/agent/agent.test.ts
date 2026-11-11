@@ -212,3 +212,21 @@ describe('templates: redness words and "stop the alerts"', () => {
     });
   });
 });
+
+describe('negated reports are a clear "no"', () => {
+  test.each(['ما فيه احمرار الحمدلله', 'لا ما فيه احمرار', 'ما فيه جرح', 'ما فيه شي الحمدلله'])(
+    '%s → reassuring template, no escalation, no confirm',
+    (text) => {
+      const r = reply({ text }, ctx());
+      expect(r.msgs[0]!.tone).not.toBe('urgent');
+      expect(r.msgs[0]!.text).toContain('الحمد لله');
+      expect(r.msgs[0]!.text).not.toContain('فهمت إنك تحس');
+      expect(r.effects.some((e) => e.type === 'event' && e.event.kind === 'redflag')).toBe(false);
+      expect(r.effects.some((e) => e.type === 'goto')).toBe(false);
+    },
+  );
+  test('redness without negation still asks to confirm, with "ب" joined correctly', () => {
+    expect(reply({ text: 'رجلي محمرة شوي' }, ctx()).msgs[0]!.text).toContain('تحس باحمرار.');
+    expect(reply({ text: 'شي غريب' }, ctx(), [], 'ألم جديد').msgs[0]!.text).toContain('تحس بألم جديد.');
+  });
+});

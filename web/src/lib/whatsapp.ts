@@ -44,5 +44,7 @@ export function telLink(phone: string): string | null {
 /** "أرسل لـسعد على واتساب", or "أرسل للعائلة على واتساب" when no name is saved. */
 export function sendLabel(name: string): string {
   const n = name.trim();
-  return n ? `أرسل لـ${n} على واتساب` : 'أرسل للعائلة على واتساب';
+  if (!n) return 'أرسل للعائلة على واتساب';
+  // "ل" + "ال..." is written "لل..." (never "لـال").
+  return n.startsWith('ال') ? `أرسل لل${n.slice(2)} على واتساب` : `أرسل لـ${n} على واتساب`;
 }

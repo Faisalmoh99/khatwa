@@ -81,6 +81,16 @@ export function softReports(text: string): { code: ReportCode; why: string }[] {
   }).map(({ code, why }) => ({ code, why }));
 }
 
+/** A report word that is negated ("ما فيه احمرار", "لا ما فيه جرح"): the patient is saying no. */
+export function negatedReport(text: string): boolean {
+  const t = norm(text);
+  return [...FLAGS, ...SOFT].some((f) => {
+    const m = t.match(f.re);
+    if (!m || m.index === undefined) return false;
+    return NEG.test(t.slice(0, m.index + (m[0].startsWith(' ') ? 1 : 0)));
+  });
+}
+
 /** Medical questions the assistant must not answer (diagnosis, treatment, medicine). */
 export const MEDICAL =
   /(هل (هذا|هذي|ده|الجرح)? ?(خطير|خطر)|وش (المرض|المشكله|اخذ)|ايش (المرض|المشكله)|دواء|ادويه|مضاد حيوي|مرهم|كريم|علاج|اتعالج|تشخيص|اشخص|حبوب)/;
@@ -99,6 +109,7 @@ export type Intent =
   | 'now'
   | 'care'
   | 'doc'
+  | 'fine'
   | 'ok';
 
 const INTENTS: [Intent, RegExp][] = [
@@ -116,6 +127,7 @@ const INTENTS: [Intent, RegExp][] = [
   ['device', /(ما تشتغل|عطلان|خربان|مشكله (في|ب)?(الجهاز|السجاده)|السجاده (ما|فيها)|لا تعمل|ما تقيس)/],
   ['photo', /(صور|صوره|الصوره|اصور)/],
   ['check', /(فحص|ابدا)/],
+  ['fine', /(الحمد ?لله|ما فيه شي|مافيه شي|ما في شي|مافي شي|كل شي تمام|كله تمام|بخير)/],
   ['ok', /^(فهمت|تمام|حاضر|اوكي|ok|ابشر|ان شاء الله|شكرا|الله يعطيك العافيه|طيب)/],
 ];
 

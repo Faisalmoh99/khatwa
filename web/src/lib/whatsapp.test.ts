@@ -55,3 +55,7 @@ test('send button label: name, or "للعائلة" (never "لـالعائلة")'
   expect(sendLabel('سعد')).toBe('أرسل لـسعد على واتساب');
   expect(sendLabel('  ')).toBe('أرسل للعائلة على واتساب');
 });
+
+test('send label never writes "لـال"', () => {
+  expect(sendLabel('الوالد')).toBe('أرسل للوالد على واتساب');
+});

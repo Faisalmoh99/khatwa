@@ -8,7 +8,7 @@ import type { NewEvent } from '@/data/types';
 import { consecutiveDays, dayWord, ltr } from '../format';
 import type { FinalLevel, Mode } from '../level';
 import type { Status } from '../rules/rules';
-import { intent, type Intent, MEDICAL, norm, redFlags, softReports } from './understand';
+import { intent, type Intent, MEDICAL, negatedReport, norm, redFlags, softReports } from './understand';
 
 export type QuickReplyId =
   | 'fine'
@@ -245,13 +245,14 @@ export function reply(
     if (!id && heard) {
       msgs.push(
         bot(
-          `فهمت إنك تحس بـ${heard}. عشان ينسجل صح، جاوب على الفحص السريع (ثلاث أسئلة). وإذا فيه جرح أو سائل اضغط «عندي جرح أو سائل».`,
+          `فهمت إنك تحس ب${heard}. عشان ينسجل صح، جاوب على الفحص السريع (ثلاث أسئلة). وإذا فيه جرح أو سائل اضغط «عندي جرح أو سائل».`,
           ['check', 'wound'],
         ),
       );
       ev({ kind: 'message', data: { text: text.slice(0, 200), heard } });
       return { msgs, effects };
     }
+    if (!id && negatedReport(text)) id = 'fine'; // "ما فيه احمرار الحمدلله": a clear no
     if (!id) {
       msgs.push(
         bot(

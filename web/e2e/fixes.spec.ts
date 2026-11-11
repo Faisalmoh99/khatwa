@@ -76,7 +76,7 @@ test('assistant: redness words ask to confirm, "stop alerts" points to travel mo
   await page.route('**/api/ai', (r) => r.fulfill({ json: { fallback: true, reason: 'test' } }));
   await page.getByTestId('chat-input').fill('رجلي حمرا');
   await page.getByTestId('chat-send').click();
-  await expect(page.getByText('فهمت إنك تحس بـاحمرار')).toBeVisible();
+  await expect(page.getByText('فهمت إنك تحس باحمرار')).toBeVisible();
   await page.getByTestId('chat-input').fill('وقف التنبيهات');
   await page.getByTestId('chat-send').click();
   await expect(page.getByText(/فعّل «وضع السفر» من الإعدادات/)).toBeVisible();
@@ -88,4 +88,15 @@ test('assistant: redness words ask to confirm, "stop alerts" points to travel mo
 test('about section says what the AI does and does not do', async ({ page }) => {
   await go(page, '/settings');
   await expect(page.getByText(/Claude Haiku/)).toContainText('يفهم كلام المريض الحر بس');
+});
+
+test('family and clinic see the patient consents read-only', async ({ page }) => {
+  for (const as of ['family', 'clinic'] as const) {
+    await go(page, '/settings', { as });
+    await expect(page.getByTestId('consents-readonly')).toContainText('مشاركة التنبيهات مع العائلة');
+    await expect(page.locator('#consents').getByRole('switch')).toHaveCount(0);
+  }
+  await shot(page, '65-clinic-consents-readonly', { full: true });
+  await go(page, '/settings', { as: 'patient' });
+  await expect(page.locator('#consents').getByRole('switch')).toHaveCount(2);
 });
