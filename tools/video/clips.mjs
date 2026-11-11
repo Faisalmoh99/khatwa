@@ -223,43 +223,67 @@ const flows = {
     await stop();
     await ctx.close();
   },
-  // f) Full walkthrough, one take: scan day 1 → day 2 → family → Rafiq → clinic report.
+  // f) Full walkthrough: each flow is one continuous take at real speed; the role changes between them happen
+  //    off camera and compose_clips.py joins the takes with short crossfades (no settings screens on screen).
   async f(browser) {
     const { ctx, p } = await newPhone(browser);
     await setupDays(p, 0, 80);
     await p.goto(`${APP}/home?nosplash=1&simTick=80`);
-    await sleep(1500);
-    const stop = await record(p, 'f-walkthrough');
-    await sleep(1000);
+    await p.getByTestId('today-hero').waitFor();
+    await sleep(1200);
+    // 1) day 1 scan → yellow
+    let stop = await record(p, 'f-1-scan');
+    await sleep(2200); // home before the first scan
     await tap(p, p.getByTestId('start-scan'), 500);
     await hotStand(p);
     await until(p.getByTestId('scan-done'), 40_000);
     await p.waitForURL(/\/result/);
-    await sleep(1500);
-    await toScan(p, 500);
+    await sleep(3200); // day 1: yellow
+    await stop();
+    // 2) day 2 scan → orange with the reason, then the WhatsApp message for the family
+    await p.goto(`${APP}/scan?nosplash=1&simTick=80`);
+    await sleep(1200);
+    stop = await record(p, 'f-2-day2');
+    await sleep(600);
     await hotStand(p);
     await until(p.getByTestId('scan-done'), 40_000);
     await p.waitForURL(/\/result/);
-    await sleep(1800);
-    await tap(p, p.getByTestId('wa-family'), 600);
-    await smoothScroll(p, -1200);
-    await switchRole(p, 'family');
-    await until(p.getByTestId('family-wa'));
-    await sleep(1600);
-    await switchRole(p, 'patient');
-    await tap(p, p.getByRole('link', { name: 'رفيق' }).last(), 700);
-    await tap(p, p.getByRole('textbox'), 300);
-    await p.keyboard.type('رجلي متورمة وفيها شي ينز', { delay: 70 });
-    await tap(p, p.getByRole('button', { name: 'أرسل' }), 200);
+    await sleep(3600); // day 2: orange, the reason under it
+    await tap(p, p.getByTestId('wa-family'), 1800);
+    await stop();
+    // 3) family screen
+    await p.goto(`${APP}/family?as=family&nosplash=1`);
+    await p.getByTestId('family-wa').waitFor();
+    await sleep(1000);
+    stop = await record(p, 'f-3-family');
+    await sleep(2600);
+    await smoothScroll(p, 300);
+    await sleep(2800); // the alert the family received
+    await stop();
+    // 4) Rafiq: typing, then the red reply held
+    await p.goto(`${APP}/assistant?as=patient&nosplash=1`);
+    await p.getByRole('textbox').waitFor();
+    await sleep(1200);
+    stop = await record(p, 'f-4-rafiq');
+    await sleep(500);
+    await tap(p, p.getByRole('textbox'), 200);
+    await p.keyboard.type('رجلي متورمة وفيها شي ينز', { delay: 75 });
+    await sleep(300);
+    await tap(p, p.getByRole('button', { name: 'أرسل' }), 100);
     await until(p.getByTestId('chat').locator('li').last().filter({ hasText: 'العيادة' }), 20_000);
-    await sleep(4000);
-    await switchRole(p, 'clinic');
-    await until(p.getByTestId('patient-real'));
-    await sleep(1300);
-    await tap(p, p.getByTestId('patient-real'), 1000);
+    await sleep(1000);
+    await sleep(3200);
+    await stop();
+    // 5) clinic: list, patient, report with QR
+    await p.goto(`${APP}/clinic?as=clinic&nosplash=1`);
+    await p.getByTestId('patient-real').waitFor();
+    await sleep(1200);
+    stop = await record(p, 'f-5-clinic');
+    await sleep(3000); // red first, then orange
+    await tap(p, p.getByTestId('patient-real'), 2200);
     await tap(p, p.getByRole('link', { name: 'تقرير الزيارة' }), 700);
     await until(p.getByTestId('report-qr'));
-    await sleep(2600);
+    await sleep(3800);
     await stop();
     await ctx.close();
   },

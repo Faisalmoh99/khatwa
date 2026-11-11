@@ -36,20 +36,46 @@ def screen_video(name):
     return out, b - a
 
 
-for name in sorted(os.listdir(RAW)):
-    if not os.path.exists(f"{RAW}/{name}/marks.json"):
-        continue
-    src, dur = screen_video(name)
+XF = 0.4  # crossfade between flows in the walkthrough (s)
+
+
+def frame_it(src, dur, out, bg):
+    ff("-loop", "1", "-framerate", str(FPS), "-i", f"{FR}/bg-{bg}.png",
+       "-i", src,
+       "-loop", "1", "-framerate", str(FPS), "-i", f"{FR}/mask.png",
+       "-loop", "1", "-framerate", str(FPS), "-i", f"{FR}/overlay.png",
+       "-filter_complex",
+       f"[2:v]format=gray[m];[1:v]format=yuva420p[s];[s][m]alphamerge[sm];"
+       f"[0:v][sm]overlay={SX}:{SY}:shortest=1[bgs];[bgs][3:v]overlay=0:0:shortest=1,fps={FPS},format=yuv420p[v]",
+       "-map", "[v]", "-t", f"{dur:.3f}", "-r", str(FPS),
+       "-c:v", "libx264", "-preset", "veryfast", "-crf", "18", "-pix_fmt", "yuv420p", "-movflags", "+faststart", out)
+
+
+def walkthrough(parts):
+    """Joins the walkthrough takes with short crossfades (screen only, before framing)."""
+    vids = [screen_video(n) for n in parts]
+    inputs = sum((["-i", v] for v, _ in vids), [])
+    chain, last, off = "", "[0:v]", 0.0
+    for k in range(1, len(vids)):
+        off += vids[k - 1][1] - XF
+        out = f"[x{k}]"
+        chain += f"{last}[{k}:v]xfade=transition=fade:duration={XF}:offset={off:.3f}{out};"
+        last = out
+    total = sum(d for _, d in vids) - XF * (len(vids) - 1)
+    src = f"{TMP}/f-walkthrough.mp4"
+    ff(*inputs, "-filter_complex", chain.rstrip(";"), "-map", last, "-t", f"{total:.3f}",
+       "-c:v", "libx264", "-preset", "veryfast", "-crf", "14", "-pix_fmt", "yuv420p", src)
+    return src, total
+
+
+names = sorted(n for n in os.listdir(RAW) if os.path.exists(f"{RAW}/{n}/marks.json"))
+singles = [n for n in names if not n.startswith("f-") or n == "f-walkthrough"]
+parts = [n for n in names if n.startswith("f-") and n != "f-walkthrough"]
+jobs = [(n, *screen_video(n)) for n in singles if n != "f-walkthrough"]
+if parts:
+    jobs.append(("f-walkthrough", *walkthrough(parts)))
+for name, src, dur in jobs:
     for bg in ["teal", "white"]:
         os.makedirs(f"{OUT}/{bg}", exist_ok=True)
-        out = f"{OUT}/{bg}/{name}.mp4"
-        ff("-loop", "1", "-framerate", str(FPS), "-i", f"{FR}/bg-{bg}.png",
-           "-i", src,
-           "-loop", "1", "-framerate", str(FPS), "-i", f"{FR}/mask.png",
-           "-loop", "1", "-framerate", str(FPS), "-i", f"{FR}/overlay.png",
-           "-filter_complex",
-           f"[2:v]format=gray[m];[1:v]format=yuva420p[s];[s][m]alphamerge[sm];"
-           f"[0:v][sm]overlay={SX}:{SY}:shortest=1[bgs];[bgs][3:v]overlay=0:0:shortest=1,fps={FPS},format=yuv420p[v]",
-           "-map", "[v]", "-t", f"{dur:.3f}", "-r", str(FPS),
-           "-c:v", "libx264", "-preset", "veryfast", "-crf", "18", "-pix_fmt", "yuv420p", "-movflags", "+faststart", out)
+        frame_it(src, dur, f"{OUT}/{bg}/{name}.mp4", bg)
     print(f"{name}: {dur:.1f} s")

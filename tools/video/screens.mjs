@@ -72,5 +72,16 @@ await shot('5-clinic-list');
 
 await p.goto(`${APP}/clinic/patient/real/report?nosplash=1`);
 await p.getByTestId('report-qr').waitFor();
+// The doctor summary (Claude Haiku via the app's AI function) is generated on tap, as a doctor would.
+await p.getByTestId('report-summary-btn').click();
+await p.getByTestId('report-summary-text').waitFor({ timeout: 30_000 });
+// Summary at the bottom of the screen so the report header (QR) stays above it, if both fit.
+await p.evaluate(() => {
+  const sum = document.querySelector('[data-testid=report-summary]').getBoundingClientRect();
+  const qr = document.querySelector('[data-testid=report-qr]').getBoundingClientRect();
+  const want = sum.bottom - (innerHeight - 16); // summary bottom 16 px above the screen bottom
+  const maxForQr = qr.top - 140; // keep the QR under the banner and top bar
+  scrollBy(0, Math.max(0, Math.min(want, maxForQr)));
+});
 await shot('6-report');
 await b.close();
