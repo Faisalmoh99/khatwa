@@ -48,4 +48,5 @@ static const float OFFSET_R[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 #define SAMPLE_EVERY_MS 1000   // read sensors, update live, print the USB line
 #define STATUS_EVERY_MS 10000  // heartbeat
 #define WIFI_RETRY_MS 10000    // reconnect attempt when Wi-Fi is down (skipped while measuring)
+#define TLS_CONNECT_TIMEOUT_MS 30000  // max wait for the TCP connect under TLS (slow links: phone hotspot, Wokwi gateway ~6 s)
 #define SCAN_QUEUE 10          // scans kept in RAM while offline

@@ -57,7 +57,7 @@ More detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · data contract: [doc
 | Rafiq: fixed templates + Claude Haiku for free text (never sets the level), Arabic voice | AI analysis of foot photos (photos are only stored for the clinic) | Android app (Capacitor) |
 | Family WhatsApp message, clinic list, visit report with QR and PDF | Medical-grade sensors (TMP117) | Data hosting in Saudi Arabia + PDPL review |
 | ESP32 firmware: compiles for ESP32, core logic tested on the computer (g++), JSON checked against the database rules | | |
-| Virtual mat: the same firmware on a Wokwi circuit (8 × DS18B20, 2 potentiometers standing in for the heel sensors) writing to Firebase, shown in the app. *In progress, see `firmware/wokwi/`* | | |
+| Virtual mat: the same firmware on a [Wokwi circuit](https://wokwi.com/projects/480390288294528001) (8 × DS18B20, 2 potentiometers standing in for the heel sensors) writing to Firebase, shown in the app. **Measured: scan sent → shown in the app, median 342 ms over 5 runs** (method and limits in [`firmware/wokwi/README.md`](firmware/wokwi/README.md)) | | |
 | Rule lab on synthetic patients (labelled "simulation, numbers from our assumptions") | | |
 
 Everything the demo shows comes from the simulator or the Wokwi virtual mat, and every screen says so in a banner.

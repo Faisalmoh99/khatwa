@@ -229,6 +229,7 @@ void setup() {
   configTime(0, 0, "pool.ntp.org", "time.google.com");
 
   sslClient.setInsecure();
+  sslClient.setConnectionTimeout(TLS_CONNECT_TIMEOUT_MS);  // the default gave up before a slow (~6 s) connect finished
   initializeApp(aClient, app, getAuth(userAuth), onAuth, "auth");
   app.getApp<RealtimeDatabase>(db);
   db.url(FIREBASE_DB_URL);
