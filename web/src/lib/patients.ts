@@ -51,6 +51,7 @@ export function buildPatient(
   const t = today.thermal;
   const site = t?.alertSites[0] ?? t?.check.flagged[0];
   const pr = priority({
+    level: today.level,
     thermal: t?.status ?? null,
     streak: site !== undefined ? (t?.streak[site] ?? 0) : 0,
     missed: ladder.missed,
@@ -97,7 +98,13 @@ export function virtualPatients(now: number): PatientModel[] {
   });
 }
 
-/** Real patient first (always on top), then the synthetic ones by priority. */
+/**
+ * Whole list by priority (red above any orange, and so on). On a tie the device patient comes first.
+ * (It used to be pinned on top; that could put an orange device patient above a red one.)
+ */
 export function orderPatients(real: PatientModel, virtual: PatientModel[]): PatientModel[] {
-  return [real, ...[...virtual].sort((a, b) => b.priority.score - a.priority.score)];
+  return [real, ...virtual]
+    .map((p, i) => ({ p, i }))
+    .sort((a, b) => b.p.priority.score - a.p.priority.score || a.i - b.i)
+    .map((x) => x.p);
 }

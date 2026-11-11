@@ -50,18 +50,26 @@ test.describe('phase 3: family', () => {
 });
 
 test.describe('phase 3: clinic', () => {
-  test('patient list: real patient on top, the rest labelled virtual and sorted by priority', async ({
+  test('patient list: whole list by priority (red above any orange), the rest labelled virtual', async ({
     page,
   }) => {
     await go(page, '/clinic', { as: 'clinic' });
     const items = page.getByTestId('patients').locator('li');
     await expect(items).toHaveCount(6);
-    await expect(items.first()).toContainText('محاكاة'); // simulated data is never tagged as the real device
-    for (let i = 1; i < 6; i++) await expect(items.nth(i)).toContainText('افتراضي');
-    const scores = await items.evaluateAll((els) =>
-      els.slice(1).map((e) => Number(e.textContent!.match(/\((\d+)\)/)?.[1])),
+    // simulated data is never tagged as the real device
+    await expect(items.filter({ hasText: 'محاكاة' }).filter({ hasNotText: 'افتراضي' })).toHaveCount(1);
+    await expect(items.filter({ hasText: 'افتراضي' })).toHaveCount(5);
+    const rows = await items.evaluateAll((els) =>
+      els.map((e) => ({
+        score: Number(e.textContent!.match(/\((\d+)\)/)?.[1]),
+        level: e.querySelector('[data-level]')?.getAttribute('data-level'),
+      })),
     );
+    const scores = rows.map((r) => r.score);
     expect(scores).toEqual([...scores].sort((a, b) => b - a));
+    const firstOrange = rows.findIndex((r) => r.level === 'orange');
+    const lastRed = rows.map((r) => r.level).lastIndexOf('red');
+    if (firstOrange >= 0 && lastRed >= 0) expect(lastRed).toBeLessThan(firstOrange);
     await checkLayout(page);
     await shot(page, '51-clinic-patients', { full: true });
   });

@@ -141,6 +141,9 @@ describe('reply: escalates, never diagnoses', () => {
   });
 });
 
+const maxOrangeInput = () =>
+  ({ thermal: 'alert', streak: 9, missed: 9, redFlag: true, checkFlag: true, unresponsive: true }) as const;
+
 describe('priority (no photo/pressure/perfusion items)', () => {
   test('hot spot 2 days', () => {
     expect(
@@ -156,6 +159,68 @@ describe('priority (no photo/pressure/perfusion items)', () => {
     expect(priority({ thermal: null, streak: 0, missed: 9, redFlag: false, checkFlag: false }).score).toBe(
       24,
     );
+  });
+  test('red always ranks above any orange, whatever the other items add up to', () => {
+    const maxOrange = priority({
+      level: 'orange',
+      thermal: 'alert',
+      streak: 9,
+      missed: 9,
+      redFlag: true,
+      checkFlag: true,
+      unresponsive: true,
+    });
+    const minRed = priority({
+      level: 'red',
+      thermal: null,
+      streak: 0,
+      missed: 0,
+      redFlag: false,
+      checkFlag: false,
+    });
+    expect(minRed.score).toBeGreaterThan(maxOrange.score);
+    expect(minRed.band).toBe('عاجل');
+    // and orange above any yellow, yellow above any green
+    const maxYellow = priority({ ...maxOrangeInput(), level: 'yellow' });
+    const minOrange = priority({
+      level: 'orange',
+      thermal: null,
+      streak: 0,
+      missed: 0,
+      redFlag: false,
+      checkFlag: false,
+    });
+    expect(minOrange.score).toBeGreaterThan(maxYellow.score);
+    const maxGreen = priority({ ...maxOrangeInput(), level: 'green' });
+    const minYellow = priority({
+      level: 'yellow',
+      thermal: null,
+      streak: 0,
+      missed: 0,
+      redFlag: false,
+      checkFlag: false,
+    });
+    expect(minYellow.score).toBeGreaterThan(maxGreen.score);
+  });
+  test('the reported case: red with 90 points ranks above orange with 110', () => {
+    const abuSaad = priority({
+      level: 'red',
+      thermal: 'alert',
+      streak: 2,
+      missed: 0,
+      redFlag: true,
+      checkFlag: false,
+    });
+    const abdullah = priority({
+      level: 'orange',
+      thermal: 'alert',
+      streak: 4,
+      missed: 3,
+      redFlag: true,
+      checkFlag: false,
+    });
+    expect(abuSaad.score).toBeGreaterThan(abdullah.score);
+    expect(abuSaad.parts[0]!.label).toBe('المستوى اليوم: أحمر');
   });
   test('labels never mention photo, pressure or perfusion', () => {
     const p = priority({

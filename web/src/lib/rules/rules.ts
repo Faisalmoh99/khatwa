@@ -273,6 +273,20 @@ export function baseline(days: Day[], n = 7): ({ mean: number; n: number } | nul
   });
 }
 
+/** A temperature as every screen shows it: rounded to 0.1° (the same rounding everywhere). */
+export const tenth = (v: number) => Math.round(v * 10) / 10;
+
+/**
+ * The R − L difference the patient SEES: computed from the two temperatures as displayed (0.1°), so
+ * "34.0 and 31.6" always reads "2.4°". Display only: the rule itself always uses the raw values (check.diff).
+ */
+export function shownDiff(scan: ScanInput, i: number): number | null {
+  const L = toArr(scan.L)[i];
+  const R = toArr(scan.R)[i];
+  if (typeof L !== 'number' || typeof R !== 'number' || L <= -100 || R <= -100) return null;
+  return (Math.round(R * 10) - Math.round(L * 10)) / 10;
+}
+
 /**
  * One-line Arabic description of a day's result.
  * Wording differs from rules.js on purpose (R8: "يومين متتاليين" instead of "2 أيام"). Logic is identical.
@@ -284,6 +298,7 @@ export function describe(row: EvaluatedDay | null | undefined): string {
   const i = (row.alertSites[0] ?? row.check.flagged[0]) as number;
   const d = row.check.diff[i] as number;
   const foot = d > 0 ? 'اليمنى' : 'اليسرى';
-  const base = `فرق ${ltr(Math.abs(d).toFixed(1) + '°')} عند ${SITES[i]!.ar} (القدم ${foot} أسخن)`;
+  const shown = shownDiff(row.scan, i) ?? tenth(d);
+  const base = `فرق ${ltr(Math.abs(shown).toFixed(1) + '°')} عند ${SITES[i]!.ar} (القدم ${foot} أسخن)`;
   return row.status === 'alert' ? `${base} ${consecutiveDays(row.streak[i] ?? 2)}` : `${base} اليوم فقط`;
 }

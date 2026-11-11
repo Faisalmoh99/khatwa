@@ -22,8 +22,8 @@ export function Patients() {
   return (
     <AppShell title="المرضى" nav={CLINIC_NAV}>
       <p className="text-base text-ink-2">
-        مريض السجادة فوق دائمًا ({ownPatientTag(kind)}). البقية <b>افتراضيون</b> ببيانات محاكاة، مرتّبون حسب
-        الأولوية.
+        مرتّبون حسب الأولوية: الأحمر أولًا، ثم البرتقالي، ثم الأصفر. مريض السجادة ({ownPatientTag(kind)})،
+        والبقية <b>افتراضيون</b> ببيانات محاكاة.
       </p>
       <ul className="grid gap-3" data-testid="patients">
         {list.map((p) => (

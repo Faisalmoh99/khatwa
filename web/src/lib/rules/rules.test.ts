@@ -5,6 +5,8 @@ import {
   checkScan,
   daysSinceLastValid,
   describe,
+  shownDiff,
+  tenth,
   evaluate,
   POLICY,
   THRESH,
@@ -210,6 +212,39 @@ group('R10 additional cases', () => {
     expect(b[1]).toEqual({ mean: 0, n: 7 }); // day 8 is outside the window
   });
 
+  test('displayed difference matches the displayed temperatures (34.04 / 31.58 → 34.0 / 31.6 → 2.4°)', () => {
+    const scan = { L: [30, 31.58, 30, 30], R: [30, 34.04, 30, 30], ts: 0 } as unknown as Parameters<
+      typeof shownDiff
+    >[0];
+    expect(shownDiff(scan, 1)).toBe(2.4);
+    expect(tenth(34.04)).toBe(34);
+    expect(tenth(31.58)).toBe(31.6);
+    // raw difference 2.46 would have printed 2.5°
+    expect((34.04 - 31.58).toFixed(1)).toBe('2.5');
+    expect(shownDiff({ ...scan, L: [-127, 0, 0, 0] } as typeof scan, 0)).toBeNull();
+  });
+  test('describe uses the displayed difference; the rule keeps the raw one', () => {
+    const scans = [
+      {
+        L: [30, 31.58, 30, 30],
+        R: [30, 34.04, 30, 30],
+        ts: Date.UTC(2026, 10, 7, 5),
+        stable: true,
+        standingOk: true,
+      },
+      {
+        L: [30, 31.58, 30, 30],
+        R: [30, 34.04, 30, 30],
+        ts: Date.UTC(2026, 10, 8, 5),
+        stable: true,
+        standingOk: true,
+      },
+    ];
+    const r = evaluate(buildDays(scans));
+    expect(r[1]!.check.diff[1]).toBeCloseTo(2.46, 2); // raw, used by the rule
+    expect(describe(r[1])).toContain('2.4°');
+    expect(describe(r[1])).not.toContain('2.5°');
+  });
   test('describe uses the correct Arabic dual', () => {
     const r = evaluate(buildDays([scan(0, [0, 2.5, 0, 0]), scan(1, [0, 2.6, 0, 0])]));
     expect(describe(r[1])).toContain('ليومين متتاليين');

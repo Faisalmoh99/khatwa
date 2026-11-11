@@ -17,7 +17,7 @@ import {
 import { classifyText, installId } from '@/lib/ai';
 import { combine, needsAi } from '@/lib/agent/combine';
 import { focusSite } from '@/lib/level';
-import { SITES } from '@/lib/rules/rules';
+import { shownDiff, SITES } from '@/lib/rules/rules';
 import { useChat } from '@/store/chat';
 import { writeEvent } from '@/store/device';
 import { useDayViews, useLadder } from '@/store/selectors';
@@ -40,7 +40,8 @@ function useChatContext(): ChatContext {
       thermal: t?.status ?? null,
       site: SITES[i]!.ar,
       foot: (f?.foot ?? (d && d > 0 ? 'R' : 'L')) === 'R' ? 'اليمنى' : 'اليسرى',
-      dT: Math.abs(d ?? 0),
+      // what the foot map shows (0.1° temperatures), not the raw difference
+      dT: Math.abs((t ? shownDiff(t.scan, i) : null) ?? d ?? 0),
       streak: t?.streak[i] ?? 0,
       missed: ladder.missed,
       mode: today.mode,

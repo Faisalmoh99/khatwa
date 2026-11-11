@@ -1,4 +1,4 @@
-import { SITES, THRESH } from '@/lib/rules/rules';
+import { SITES, tenth, THRESH } from '@/lib/rules/rules';
 import { cn } from '@/lib/cn';
 
 /**
@@ -51,7 +51,7 @@ export function FootMap({
     return Math.abs(d) > THRESH && (foot === 'R' ? d > 0 : d < 0);
   };
   const label = (v: number | undefined) =>
-    v === undefined || v === 0 ? '—' : isFault(v) ? 'عطل' : v.toFixed(1);
+    v === undefined || v === 0 ? '—' : isFault(v) ? 'عطل' : tenth(v).toFixed(1);
 
   const foot = (side: 'L' | 'R') => {
     const vals = side === 'L' ? L : R;

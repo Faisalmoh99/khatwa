@@ -38,7 +38,7 @@ test('report counts levels, adherence, episodes and site flags from real data', 
   expect(r.episodes[0]!.why).not.toMatch(/[⁦-⁩]/);
 });
 
-test('virtual roster: labelled virtual, real patient always first', () => {
+test('virtual roster: labelled virtual; whole list by priority, red above orange, device patient wins ties', () => {
   const now = Date.UTC(2026, 10, 8, 12);
   const v = virtualPatients(now);
   expect(v).toHaveLength(5);
@@ -48,9 +48,26 @@ test('virtual roster: labelled virtual, real patient always first', () => {
     now,
   );
   const list = orderPatients(real, v);
-  expect(list[0]!.id).toBe('real');
-  const scores = list.slice(1).map((p) => p.priority.score);
+  const scores = list.map((p) => p.priority.score);
   expect(scores).toEqual([...scores].sort((a, b) => b - a));
+  // red, orange, yellow lead; green, no reading and paused are then ordered by their points (missed days first)
+  const rank = { red: 3, orange: 2, yellow: 1, green: 0, none: 0, paused: 0 } as const;
+  const levels = list.map((p) => rank[p.today.level]);
+  expect(levels).toEqual([...levels].sort((a, b) => b - a)); // red, then orange, then yellow…
+  // a red device patient goes above the orange Abdullah, whatever their points
+  const redReal = buildPatient(
+    {
+      id: 'real',
+      name: 'مريض خطوة 01',
+      age: null,
+      virtual: false,
+      scans: [],
+      events: [{ id: 'rf', kind: 'redflag', ts: now - 60_000, day: '2026-11-08', data: { why: 'تورم' } }],
+    },
+    now,
+  );
+  expect(redReal.today.level).toBe('red');
+  expect(orderPatients(redReal, v)[0]!.id).toBe('real');
   expect(list.find((p) => p.name === 'عبدالله')!.priority.parts.map((x) => x.label)).toContain(
     'علامة خطر من المريض',
   );
