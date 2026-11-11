@@ -34,3 +34,14 @@ python3 tools/video/compose_fullflow.py  # → deliverables/khatwa-full-flow.mp4
 
 The frame (`iphone.mjs`) is generic: modern shape, Dynamic Island, side buttons, no logo or brand marks. The island sits in a
 status bar strip (generic 9:41 and icons) so it never covers the app's honesty banner.
+
+## 16:9 version for laptops
+
+```bash
+FILM_PHONE=1 node tools/video/film.mjs all   # same story, app filmed at iPhone app size → raw-16x9/
+node tools/video/frame-16x9.mjs              # frame (centre/right), masks, 16:9 cards, one caption per scene
+python3 tools/video/compose_16x9.py          # → deliverables/khatwa-demo-16x9.mp4 (1920x1080, 30 fps)
+```
+Wokwi scene: Wokwi large on the left (zoom on the heated sensor, enlarged readout), the app in the phone on the right.
+App-only scenes: the phone centred, one large caption beside it. After a stalled stand the retry resets the sensor to
+30.7 °C and waits until the app shows the mat connected before the next take.

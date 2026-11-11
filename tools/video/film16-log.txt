@@ -1,0 +1,15 @@
+wokwi ready
+[mark] s2_start
+popup enlarged: true
+[mark] s2_slider
+[mark] s2_pots
+[mark] s2_standing
+[mark] s2_scan_shown
+[mark] s2_result
+[mark] s3_day1
+[mark] s3_scan2
+[mark] s3_scan2_shown
+[mark] s3_orange
+[mark] s3_end
+[rec] app-wokwi: 2920 frames
+[rec] wokwi: 470 frames

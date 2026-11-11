@@ -7,7 +7,11 @@ const { chromium } = require('@playwright/test');
 
 const APP = 'https://deploy-preview-1--dulcet-blini-8f718e.netlify.app';
 const WOKWI = 'https://wokwi.com/projects/480390288294528001';
-const OUT = new URL('./raw/', import.meta.url).pathname;
+// FILM_PHONE=1: the app is filmed at iPhone app size (430x873) for the 16:9 version (compose_16x9.py).
+const PHONE_MODE = process.env.FILM_PHONE === '1';
+const OUT = new URL(PHONE_MODE ? './raw-16x9/' : './raw/', import.meta.url).pathname;
+const appVp = (w, h) => (PHONE_MODE ? { width: 430, height: 873 } : { width: w, height: h });
+const appDsf = PHONE_MODE ? 2 : 2.5;
 const only = process.argv[2] ?? 'all'; // 'wokwi' | 'sim' | 'all'
 const marks = {};
 const mark = (k) => ((marks[k] = Date.now() / 1000), console.log(`[mark] ${k}`));
@@ -50,8 +54,8 @@ async function filmWokwi() {
   const wctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
   const w = await wctx.newPage();
   const actx = await browser.newContext({
-    viewport: { width: 432, height: 351 },
-    deviceScaleFactor: 2.5,
+    viewport: appVp(432, 351),
+    deviceScaleFactor: appDsf,
     locale: 'ar-SA',
     timezoneId: 'Asia/Riyadh',
   });
@@ -59,12 +63,12 @@ async function filmWokwi() {
   const app = await actx.newPage();
 
   // App: Wokwi source, demo mode switched on now (each scan = one day from here).
-  await app.setViewportSize({ width: 432, height: 640 });
+  await app.setViewportSize(appVp(432, 640));
   await app.goto(`${APP}/settings?source=wokwi&as=patient&nosplash=1`);
   await app.getByText('متصل بالسجادة الافتراضية (Wokwi)').first().waitFor();
   const demo = app.getByRole('switch', { name: /كل فحص = يوم/ });
   if ((await demo.getAttribute('aria-checked')) !== 'true') await demo.click();
-  await app.setViewportSize({ width: 432, height: 351 });
+  await app.setViewportSize(appVp(432, 351));
   await app.goto(`${APP}/scan?nosplash=1`);
   await app.getByText('متصل بالسجادة الافتراضية (Wokwi)').first().waitFor();
 
@@ -168,8 +172,15 @@ async function filmWokwi() {
     if (await scanShown(100_000)) break;
     await pots('Home');
     await restart();
+    // Wokwi keeps the slider value across a restart: put R MTH1 back to 30.7 so the next take rises again.
+    await w.mouse.click(1268, 403);
+    await sleep(800);
+    await setTemp(30.7);
+    await w.mouse.click(1415, 160); // close the sensor popup
+    await sleep(600);
     await app.goto(`${APP}/scan?nosplash=1`);
     await app.getByText('متصل بالسجادة الافتراضية (Wokwi)').first().waitFor();
+    await connected(); // never start a take while the app still shows the mat offline
     await sleep(1500);
   }
   mark('s2_scan_shown');
@@ -179,7 +190,7 @@ async function filmWokwi() {
   await sleep(2500);
 
   // Scene 3: full-height app. Day 1 result (yellow), then a second stand = day 2.
-  await app.setViewportSize({ width: 432, height: 640 });
+  await app.setViewportSize(appVp(432, 640));
   await sleep(1500);
   mark('s3_day1');
   await sleep(3500);
@@ -220,8 +231,8 @@ async function filmWokwi() {
 
 async function filmSim() {
   const ctx = await browser.newContext({
-    viewport: { width: 432, height: 640 },
-    deviceScaleFactor: 2.5,
+    viewport: appVp(432, 640),
+    deviceScaleFactor: appDsf,
     locale: 'ar-SA',
     timezoneId: 'Asia/Riyadh',
   });
