@@ -35,10 +35,11 @@ export function phoneHtml({
   const y = pad + b;
   const btn = (side, top, h) =>
     `<div style="position:absolute;${side === 'L' ? `left:${pad - 3 * k}px` : `left:${pad + W + 2 * b - 0.5 * k}px`};top:${pad + top * k}px;width:${3.5 * k}px;height:${h * k}px;border-radius:${2 * k}px;background:linear-gradient(90deg,#2b2b30,#55555c,#2b2b30)"></div>`;
-  return `
+  // The frame sets its own box model, so a page with box-sizing:border-box cannot shrink the bezel.
+  return `<div style="display:contents">
   ${
     hollow
-      ? `<div style="position:absolute;left:${pad}px;top:${pad}px;width:${W}px;height:${H}px;border:${b}px solid #0b0b0d;border-radius:${r + b}px;
+      ? `<div style="position:absolute;box-sizing:content-box;left:${pad}px;top:${pad}px;width:${W}px;height:${H}px;border:${b}px solid #0b0b0d;border-radius:${r + b}px;
       box-shadow:0 0 0 ${1.6 * k}px #5c5c63${shadow ? `, 0 ${18 * k}px ${44 * k}px rgba(0,0,0,.30)` : ''}"></div>`
       : `<div style="position:absolute;left:${pad}px;top:${pad}px;width:${W + 2 * b}px;height:${H + 2 * b}px;border-radius:${r + b}px;
       background:#0b0b0d;box-shadow:inset 0 0 0 ${1.6 * k}px #5c5c63, inset 0 0 0 ${3 * k}px #1c1c20${shadow ? `, 0 ${18 * k}px ${44 * k}px rgba(0,0,0,.30)` : ''}"></div>`
@@ -50,7 +51,7 @@ export function phoneHtml({
     <div style="position:absolute;right:${26 * k}px;top:${21 * k}px">${statusIcons(k, statusFg)}</div>
     <div style="position:absolute;left:${(W - 126 * k) / 2}px;top:${11 * k}px;width:${126 * k}px;height:${37 * k}px;border-radius:${19 * k}px;background:#000"></div>
     ${screen ? `<div style="position:absolute;left:0;top:${PHONE.status * k}px;width:${W}px;height:${PHONE.appH * k}px">${screen}</div>` : ''}
-  </div>`;
+  </div></div>`;
 }
 
 /** Outer size of the framed phone image in px. */
