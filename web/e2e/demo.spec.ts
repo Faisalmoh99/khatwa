@@ -116,7 +116,10 @@ test('«جرّب السيناريو»: scan, day 1 yellow, day 2 orange, family,
   await expect(page).toHaveURL(/\/assistant/);
   // The step sends the patient's sentence by itself (one story): no tap needed, «التالي» waits for it.
   await expect(page.getByTestId('chat')).toContainText('رجلي متورمة وفيها شي ينز', { timeout: 10_000 });
-  await expect(page.getByTestId('chat').locator('li').last()).toContainText('العيادة', { timeout: 15_000 });
+  // the red reply itself (the opener also mentions the clinic)
+  await expect(page.getByTestId('chat').locator('li').last()).toContainText('علامة نحتاج العيادة', {
+    timeout: 15_000,
+  });
   await expect(page.getByRole('textbox')).toHaveValue('');
   await shot(page, 'd4-tour-6-rafiq');
   await next.click();

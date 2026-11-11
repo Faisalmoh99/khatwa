@@ -229,6 +229,9 @@ try {
     for (let i = 0; i < ids.length; i++) {
       await p.locator(`[data-testid=tour-card][data-step="${ids[i]}"]`).waitFor({ timeout: 30_000 });
       if (ids[i].startsWith('scan')) await p.getByRole('progressbar').waitFor();
+      // Rafiq step: the tour sends the sentence itself; shoot once the red reply is there.
+      if (ids[i] === 'rafiq')
+        await p.getByTestId('chat').locator('li').last().filter({ hasText: 'علامة نحتاج العيادة' }).waitFor({ timeout: 20_000 });
       await shot(p, `tour-${i + 1}`, { settle: ids[i].startsWith('scan') ? 700 : 1300 });
       if (!ids[i].startsWith('scan') && i < ids.length - 1) await p.getByTestId('tour-next').click();
     }
