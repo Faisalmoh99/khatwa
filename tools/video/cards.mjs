@@ -6,7 +6,7 @@ const { chromium } = require('@playwright/test');
 
 const F = new URL('../../web/node_modules/@fontsource/ibm-plex-sans-arabic/files/ibm-plex-sans-arabic-arabic', import.meta.url).pathname;
 const LOGO = new URL('../../web/public/logo.png', import.meta.url).pathname;
-const APP_URL = process.env.APP_URL ?? 'deploy-preview-1--dulcet-blini-8f718e.netlify.app';
+const APP_URL = process.env.APP_URL ?? 'khatwa-medathon.netlify.app';
 const OUT = new URL('./cards/', import.meta.url).pathname;
 const data = (file, type) => `data:${type};base64,${readFileSync(file).toString('base64')}`;
 const font = (w) => data(`${F}-${w}-normal.woff2`, 'font/woff2');

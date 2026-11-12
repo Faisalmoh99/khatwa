@@ -3,6 +3,8 @@ Every app/Wokwi pixel comes from the screencast frames; cards and caption bands 
 import json, subprocess, os, sys
 
 D = os.path.dirname(os.path.abspath(__file__))
+# REUSE_SCENES=1: re-render only the closing card (card7) and re-join the scenes already in tmp/ (no re-filming).
+REUSE = os.environ.get("REUSE_SCENES") == "1"
 RAW, CARDS, TMP = f"{D}/raw", f"{D}/cards", f"{D}/tmp"
 OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(D, "..", "..", "deliverables", "khatwa-demo.mp4")
 os.makedirs(TMP, exist_ok=True)
@@ -65,6 +67,8 @@ def tag_overlay(src, out, fast_ranges, y):
 
 def scene(name, parts, total, band_name, layout):
     """parts: list of (stream_set, a, b, speed). layout 'split' or 'full'. Returns the scene file."""
+    if REUSE and os.path.exists(f"{TMP}/{name}.mp4"):
+        return f"{TMP}/{name}.mp4"  # closing-card-only re-render: keep the composed scene
     pieces = fit([(a, b, s) for _, a, b, s in parts], total)
     segs, fast, t = [], [], 0.0
     for i, ((streams, _, _, _), (a, b, s)) in enumerate(zip(parts, pieces)):
@@ -100,6 +104,8 @@ def scene(name, parts, total, band_name, layout):
 
 def card(name, secs):
     out = f"{TMP}/{name}.mp4"
+    if REUSE and name != "card7" and os.path.exists(out):
+        return out
     ff("-loop", "1", "-i", f"{CARDS}/{name}.png", "-vf",
        f"fps={FPS},format=yuv420p,fade=t=in:st=0:d=0.5,fade=t=out:st={secs - 0.5}:d=0.5",
        "-t", str(secs), "-c:v", "libx264", "-preset", "veryfast", "-crf", "16", out)

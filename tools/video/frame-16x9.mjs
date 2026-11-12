@@ -11,7 +11,7 @@ const W = 1920, H = 1080, K = 1.04, B = 13 * K;
 const F = new URL('../../web/node_modules/@fontsource/ibm-plex-sans-arabic/files/ibm-plex-sans-arabic-arabic', import.meta.url).pathname;
 const font = (w) => `data:font/woff2;base64,${readFileSync(`${F}-${w}-normal.woff2`).toString('base64')}`;
 const logo = `data:image/png;base64,${readFileSync(new URL('../../web/public/logo.png', import.meta.url)).toString('base64')}`;
-const APP_URL = process.env.APP_URL ?? 'deploy-preview-1--dulcet-blini-8f718e.netlify.app';
+const APP_URL = process.env.APP_URL ?? 'khatwa-medathon.netlify.app';
 
 const phoneW = (PHONE.w + 26) * K, phoneH = (PHONE.h + 26) * K;
 const top = Math.round((H - phoneH) / 2);
