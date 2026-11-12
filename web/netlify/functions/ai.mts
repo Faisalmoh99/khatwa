@@ -89,7 +89,8 @@ export async function takeQuota(
 ): Promise<boolean> {
   const key = `${day}/${device}`;
   try {
-    const store = getStore('khatwa-ai-quota');
+    // Strong consistency: the default (eventual) read a stale count, so the cap never triggered.
+    const store = getStore({ name: 'khatwa-ai-quota', consistency: 'strong' });
     const n = Number(await store.get(key)) || 0;
     if (n >= DAILY_LIMIT) return false;
     await store.set(key, String(n + 1));
