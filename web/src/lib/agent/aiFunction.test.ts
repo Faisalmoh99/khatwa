@@ -80,6 +80,23 @@ describe('/api/ai function', () => {
     expect((await call({ task: 'classify', text: 'مرحبا', device: 'khatwa-01:other' })).status).toBe(200);
   });
 
+  test('the app site and its deploy previews are allowed origins', async () => {
+    m.parse.mockResolvedValue({ stop_reason: 'end_turn', parsed_output: { report: 'none' } });
+    for (const o of [
+      'https://khatwa-app-sa.netlify.app',
+      'https://deploy-preview-2--khatwa-app-sa.netlify.app',
+    ])
+      expect((await call({ task: 'classify', text: 'مرحبا', device: 'origin-ok' }, o)).status).toBe(200);
+    expect(
+      (
+        await call(
+          { task: 'classify', text: 'مرحبا', device: 'd' },
+          'https://khatwa-app-sa.netlify.app.evil.example',
+        )
+      ).status,
+    ).toBe(403);
+  });
+
   test('unknown origin is rejected without calling the model', async () => {
     const r = await call({ task: 'classify', text: 'مرحبا', device: 'd' }, 'https://evil.example');
     expect(r.status).toBe(403);

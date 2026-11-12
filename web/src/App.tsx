@@ -18,7 +18,7 @@ import { Result } from '@/screens/patient/Result';
 import { Scan } from '@/screens/patient/Scan';
 import { Settings } from '@/screens/patient/Settings';
 import { type Role, useSettings } from '@/store/settings';
-import { useTour } from '@/store/tour';
+import { startTour, useTour } from '@/store/tour';
 import { useEscalationWriter } from '@/store/useEscalationWriter';
 import { useSourceBinding } from '@/store/useSourceBinding';
 
@@ -105,7 +105,25 @@ function StickyBanners() {
 /** Inside the router: the tour navigates between screens. */
 function TourDriver() {
   useTourDriver();
+  useTourDeepLink();
   return null;
+}
+
+/**
+ * `?tour=1` (the landing page's «جرّب التطبيق» button) opens straight into the guided tour.
+ * The parameter is removed so a reload or a home-screen shortcut does not restart it.
+ */
+let deepLinkHandled = false;
+function useTourDeepLink() {
+  useEffect(() => {
+    if (deepLinkHandled) return;
+    deepLinkHandled = true;
+    const url = new URL(location.href);
+    if (!url.searchParams.has('tour')) return;
+    url.searchParams.delete('tour');
+    history.replaceState(history.state, '', url.pathname + url.search + url.hash);
+    if (!useTour.getState().active) startTour();
+  }, []);
 }
 
 function useSplash() {

@@ -1,6 +1,11 @@
 import { defineConfig, devices } from '@playwright/test';
 
-/** iPhone-sized viewport (390x844) in Arabic RTL, served from the production build. */
+/**
+ * iPhone-sized viewport (390x844) in Arabic RTL, served from the production build.
+ * E2E_BASE_URL=https://… runs the suite against a live deploy instead (no local server).
+ */
+const LIVE = process.env.E2E_BASE_URL;
+
 export default defineConfig({
   testDir: './e2e',
   snapshotPathTemplate: '{testDir}/__screenshots__/{arg}{ext}',
@@ -11,7 +16,7 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'github' : 'list',
   use: {
-    baseURL: 'http://localhost:4173',
+    baseURL: LIVE ?? 'http://localhost:4173',
     viewport: { width: 390, height: 844 },
     deviceScaleFactor: 2,
     isMobile: true,
@@ -20,11 +25,25 @@ export default defineConfig({
     timezoneId: 'Asia/Riyadh',
     trace: 'retain-on-failure',
   },
-  projects: [{ name: 'iphone', use: { browserName: 'chromium', ...devices['Desktop Chrome'], viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 } }],
-  webServer: {
-    command: 'npm run preview',
-    url: 'http://localhost:4173',
-    reuseExistingServer: !process.env.CI,
-    timeout: 60_000,
-  },
+  projects: [
+    {
+      name: 'iphone',
+      use: {
+        browserName: 'chromium',
+        ...devices['Desktop Chrome'],
+        viewport: { width: 390, height: 844 },
+        isMobile: true,
+        hasTouch: true,
+        deviceScaleFactor: 2,
+      },
+    },
+  ],
+  webServer: LIVE
+    ? undefined
+    : {
+        command: 'npm run preview',
+        url: 'http://localhost:4173',
+        reuseExistingServer: !process.env.CI,
+        timeout: 60_000,
+      },
 });

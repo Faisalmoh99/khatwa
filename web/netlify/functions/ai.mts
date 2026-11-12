@@ -12,7 +12,7 @@ import { z } from 'zod';
 import { AI_CODES, AI_MODEL, DAILY_LIMIT, MAX_TEXT } from '../../src/lib/agent/aiCodes';
 
 const ALLOWED_ORIGIN =
-  /^(https:\/\/([a-z0-9-]+--)?dulcet-blini-8f718e\.netlify\.app|http:\/\/localhost:\d+)$/;
+  /^(https:\/\/([a-z0-9-]+--)?(dulcet-blini-8f718e|khatwa-app-sa)\.netlify\.app|http:\/\/localhost:\d+)$/;
 
 const CLASSIFY_SYSTEM = `You classify one short message from an older Saudi patient with diabetes about their feet (Saudi or Gulf Arabic dialect).
 Return the single best report:

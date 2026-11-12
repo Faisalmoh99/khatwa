@@ -163,6 +163,17 @@ test('the tour also starts from the welcome screen without signing up, and retur
   await expect(page).toHaveURL(/\/welcome/);
 });
 
+test('?tour=1 (the landing page button) opens straight into the tour, once', async ({ page }) => {
+  await page.goto('/?tour=1&nosplash=1&simTick=40');
+  await expect(page.getByTestId('tour-card')).toHaveAttribute('data-step', 'scan1');
+  await expect(page.getByTestId('source-banner')).toBeVisible();
+  expect(new URL(page.url()).searchParams.has('tour')).toBe(false);
+  await page.getByTestId('tour-exit').click();
+  await expect(page).toHaveURL(/\/welcome/);
+  await page.reload();
+  await expect(page.getByTestId('tour-card')).toHaveCount(0);
+});
+
 test('honesty: build status sentence on welcome, device and about; the simulator is never called the mat', async ({
   page,
 }) => {
