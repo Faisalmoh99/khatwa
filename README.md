@@ -12,6 +12,18 @@
 
 Team Khatwa · MEDATHON 2026 (SYHF, Jeddah).
 
+## Try it
+
+| | Link |
+|---|---|
+| Project page (films + demo video) | **https://khatwa-medathon.netlify.app** |
+| The app (opens on simulated data; the button on the project page starts the guided tour) | https://khatwa-app-sa.netlify.app · tour directly: [`/?tour=1`](https://khatwa-app-sa.netlify.app/?tour=1) |
+| Virtual mat: the real ESP32 firmware on a Wokwi circuit | https://wokwi.com/projects/480390288294528001 |
+
+**The guided tour** («جرّب السيناريو», no sign-up): two scans on the simulated mat (day 1 yellow, day 2 orange by the IWGDF rule) → WhatsApp message to the family → the family screen → the patient tells Rafiq «رجلي متورمة وفيها شي ينز» (red) → the clinic list with Abu Saad red and first → the visit report. Nothing is written to Firebase.
+
+**The virtual mat:** open the Wokwi link and press ▶. In the app: Settings → «مصدر البيانات» → «السجادة الافتراضية (Wokwi)». In Wokwi, turn both heel potentiometers above half (standing), raise «R MTH1» by about 2.6 °C, and the scan appears in the app. Details: [`firmware/wokwi/README.md`](firmware/wokwi/README.md).
+
 | Home | Live scan | Result | Rafiq (assistant) |
 |---|---|---|---|
 | ![Home](web/e2e/__screenshots__/25-home-orange.png) | ![Live scan](web/e2e/__screenshots__/22-scan-measuring.png) | ![Result](web/e2e/__screenshots__/24-result-orange.png) | ![Assistant](web/e2e/__screenshots__/41-assistant-redflag.png) |
@@ -51,16 +63,32 @@ More detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · data contract: [doc
 
 | Built and tested (evidence in this repo) | Designed, not built yet | Next |
 |---|---|---|
-| Web app (PWA): patient, family and clinic screens; opens offline. Unit + e2e tests at iPhone size, accessibility checks (axe) | The physical mat: 4 × DS18B20 per foot + 1 pressure sensor under each heel, ESP32, LEDs, buzzer (parts are ordered only if we reach the finals) | Build the mat for the finals, then the calibration and accuracy tests below |
+| Web app (PWA): patient, family and clinic screens; opens offline. Unit + e2e tests at iPhone size, accessibility checks (axe) | The physical mat: 4 × DS18B20 per foot + 1 pressure sensor under each heel, ESP32, LEDs, buzzer (parts are ordered only if we reach the finals) | Build the mat for the finals, then calibrate it against a medical thermometer and measure accuracy and scan time (no such figure is claimed before that) |
 | IWGDF rule engine (> 2.2 °C, same point, same foot, 2 consecutive days) with quality checks: one foot, movement, wet foot, faulty sensor, whole-foot difference | Pressure map of the whole foot (the heel sensor only checks standing) | Pilot with a clinic, after ethics approval |
 | Adherence ladder (reminder → family → clinic), pause modes, escalation audit log | Perfusion measurement | Real push notifications (today: in-app reminder) |
 | Rafiq: fixed templates + Claude Haiku for free text (never sets the level), Arabic voice | AI analysis of foot photos (photos are only stored for the clinic) | Android app (Capacitor) |
 | Family WhatsApp message, clinic list, visit report with QR and PDF | Medical-grade sensors (TMP117) | Data hosting in Saudi Arabia + PDPL review |
 | ESP32 firmware: compiles for ESP32, core logic tested on the computer (g++), JSON checked against the database rules | | |
-| Virtual mat: the same firmware on a [Wokwi circuit](https://wokwi.com/projects/480390288294528001) (8 × DS18B20, 2 potentiometers standing in for the heel sensors) writing to Firebase, shown in the app. **Measured: scan sent → shown in the app, median 342 ms over 5 runs** (method and limits in [`firmware/wokwi/README.md`](firmware/wokwi/README.md)) | | |
+| Virtual mat: the same firmware on a [Wokwi circuit](https://wokwi.com/projects/480390288294528001) (8 × DS18B20, 2 potentiometers standing in for the heel sensors) writing to Firebase, shown in the app. **Measured: scan sent → shown in the app ≈ 0.3 s (median 342 ms of 5 runs, simulated device, not the physical mat)** (method and limits in [`firmware/wokwi/README.md`](firmware/wokwi/README.md)) | | |
+| A real firmware bug found on Wokwi and fixed (see below) | | |
 | Rule lab on synthetic patients (labelled "simulation, numbers from our assumptions") | | |
 
 Everything the demo shows comes from the simulator or the Wokwi virtual mat, and every screen says so in a banner.
+
+### A firmware bug the virtual mat caught
+
+Running the unchanged firmware on Wokwi printed `# scan saved` twice after the first scan: the Firebase library calls the result callback twice for the same push. The queue counter went to −1, and **every scan after the first stayed in memory and was never sent** until a reboot. On a real mat this would have silently lost the patient's readings from day 2 on. The fix (`if (!scanBusy) return;` in `onScan`, commit `bd69bbd`) was checked on Wokwi with two scans in a row; both were saved.
+
+### Tests (all automated, run in CI on every push)
+
+| Suite | Count | Command |
+|---|---|---|
+| Unit tests (Vitest): rule engine + parity with `rules.js`, levels, ladder, escalations, Rafiq, AI function, report, rule lab | **251** | `cd web && npm test` |
+| End-to-end (Playwright, iPhone size): every screen, guided tour, quality scenarios, accessibility (axe), PWA/offline | **92** | `cd web && npm run e2e` |
+| Rules: Firebase database rules on the emulator (20) + legacy rule engine `rules.js` (13) | **33** | `cd web && npm run test:rules` · `npm test` (root) |
+| Firmware core logic and JSON builders (g++ on the computer, no Arduino) | **41** | see [`firmware/README.md`](firmware/README.md) |
+
+The same e2e suite also runs against the live app: `E2E_BASE_URL=https://khatwa-app-sa.netlify.app npm run e2e`.
 
 ## Repository
 
@@ -95,7 +123,7 @@ npm run dev                 # http://localhost:5173
 | `npm test` | Unit tests (Vitest): rule engine + parity with `rules.js`, levels, ladder, escalations, assistant, report, rule lab |
 | `npm run e2e` | Playwright at iPhone size: every screen, quality scenarios, accessibility (axe), PWA/offline |
 | `E2E_FIREBASE=1 E2E_DEVICE_PASSWORD=… npm run e2e` | Real Firebase: legacy `/sim/` → app live view → result, and an event round trip |
-| `npm run test:rules` | Firebase rules on the local emulator (15 cases, incl. JSON built by the firmware) |
+| `npm run test:rules` | Firebase rules on the local emulator (20 cases, incl. JSON built by the firmware and the public Wokwi demo account) |
 | `npm run check:device` | Read-only check of what the device wrote to Firebase against the data contract |
 | `npm run lint` / `npm run build` | ESLint + Prettier / production build (also copies the legacy pages) |
 
@@ -107,17 +135,13 @@ The legacy rule tests still run from the repo root: `npm test`. CI runs everythi
 - Any text from Firebase is rendered as text, never as HTML (enforced by an ESLint rule).
 - Consent screen with separate opt-ins for photos and family sharing. In this prototype data is stored in Firebase (Europe); a real deployment needs storage in Saudi Arabia and a PDPL review.
 
-## Test results
+## Hosting
 
-_Planned for the physical mat (finals). No scan time or accuracy figure is claimed before it is measured on real hardware._
-
-| Test | Method | Target | Result |
-|---|---|---|---|
-| Calibration | All sensors in 35–37 °C water with a Beurer FT09 medical thermometer | within ±0.5 °C | |
-| Accuracy | Each point vs. the thermometer | mean difference ≤ 0.5 °C | |
-| Hot spot | Warm compress on one point before standing, 10 times | 10/10 | |
-| Scan time | 10 scans | under 60 s | |
-| Wet foot | Wet, after towel, after 30 s | define the instruction | |
+| Site | Branch / folder | Deploys |
+|---|---|---|
+| https://khatwa-medathon.netlify.app (project page) | `web-app` / `landing/` | `landing/deploy.sh` (the videos are generated, not in git) |
+| https://khatwa-app-sa.netlify.app (the app) | `web-app` / `web/` | every push to `web-app` (`netlify.toml`) |
+| https://dulcet-blini-8f718e.netlify.app (first prototype, story film at `/story/`, printed QR) | `main` / `app/` | every push to `main` |
 
 ## Transparency
 
@@ -126,7 +150,7 @@ _Planned for the physical mat (finals). No scan time or accuracy figure is claim
   1. Classifying the patient's **free text** (never buttons) into one of 7 fixed reports (wound, blister, swelling, fever, new pain, redness, none). It is not called when the templates already found a clear red flag. The patient always gets a fixed template reply; when AI and templates disagree, the more serious wins; redness/new pain only asks the patient to confirm in the quick check.
   2. An optional **doctor summary** of the report numbers, only when "ملخص للطبيب" is pressed, labelled «ملخص آلي، راجع الأرقام».
 
-  **The AI never sets or lowers a risk level** (that is `rules.ts` plus the patient's report). Text ≤ 300 characters, 30 requests per phone per day; any failure falls back silently to the templates. Photos are never analysed.
+  **The AI never sets or lowers a risk level** (that is `rules.ts` plus the patient's report). Text ≤ 300 characters, 30 requests per phone per day (enforced in the function); any failure falls back silently to the templates. Photos are never analysed.
 - **Simulated numbers:** the rule lab compares alert rules on synthetic patients; its numbers come from our assumptions, listed on the screen. Virtual clinic patients are labelled «افتراضي».
 
 ---
@@ -140,5 +164,7 @@ _Planned for the physical mat (finals). No scan time or accuracy figure is claim
 - **مصمم، ما انبنى:** السجادة نفسها (4 حساسات حرارة لكل قدم + ضغط الكعب). القطع تنطلب إذا وصلنا للنهائيات.
 - **إصدار قادم:** خريطة الضغط، والتروية، وتحليل الصور بالذكاء الاصطناعي، والإشعارات الحقيقية، وحساسات TMP117.
 - **الشفافية:** استُخدم Claude في كتابة أجزاء من الكود والوثائق. وفي التطبيق: Claude Haiku يفهم كلام المريض الحر ويحوّله لواحد من 7 بلاغات ثابتة، ويكتب ملخص اختياري للطبيب. **ما يغيّر مستوى الخطر أبدًا**، والرد للمريض دايمًا من القوالب. أرقام مختبر القاعدة من افتراضاتنا.
+
+**جرّبه:** صفحة المشروع https://khatwa-medathon.netlify.app · التطبيق https://khatwa-app-sa.netlify.app · السجادة الافتراضية https://wokwi.com/projects/480390288294528001
 
 التشغيل: `cd web && npm install && npm run dev` ثم افتح `localhost:5173` (يفتح على المحاكاة، وفيه زر «جرّب السيناريو»).
