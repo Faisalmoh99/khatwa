@@ -5,32 +5,271 @@
     "devices": {
       "$dev": {
         ".read": "auth != null",
+        ".validate": "$dev.matches(/^khatwa-[a-z0-9-]{1,24}$/)",
         "status": {
-          ".write": "auth != null",
-          ".validate": "newData.hasChildren(['lastSeen'])"
+          ".write": "auth != null && (auth.uid === 'J3rETaXXaDQS2GkWg9PHH4OcX1a2' || (auth.uid === 'DQ65EfL8c6M52ruhV2cebwwkvtC2' && $dev === 'khatwa-demo'))",
+          ".validate": "newData.hasChildren(['lastSeen'])",
+          "online": {
+            ".validate": "newData.isBoolean()"
+          },
+          "lastSeen": {
+            ".validate": "newData.isNumber() && newData.val() <= now + 60000"
+          },
+          "firmware": {
+            ".validate": "newData.isString() && newData.val().length <= 32"
+          },
+          "source": {
+            ".validate": "newData.val() === 'esp32' || newData.val() === 'sim'"
+          },
+          "rssi": {
+            ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() >= -127 && newData.val() <= 0))"
+          },
+          "$other": {
+            ".validate": false
+          }
         },
         "live": {
-          ".write": "auth != null",
-          ".validate": "newData.hasChildren(['phase', 'ts'])"
+          ".write": "auth != null && (auth.uid === 'J3rETaXXaDQS2GkWg9PHH4OcX1a2' || (auth.uid === 'DQ65EfL8c6M52ruhV2cebwwkvtC2' && $dev === 'khatwa-demo'))",
+          ".validate": "newData.hasChildren(['phase', 'ts'])",
+          "phase": {
+            ".validate": "newData.val() === 'idle' || newData.val() === 'placing' || newData.val() === 'settling' || newData.val() === 'done' || newData.val() === 'error'"
+          },
+          "msg": {
+            ".validate": "newData.isString() && newData.val().length <= 80"
+          },
+          "L": {
+            ".validate": "newData.hasChildren(['0', '1', '2', '3'])",
+            "0": {
+              ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -55 && newData.val() <= 125)))"
+            },
+            "1": {
+              ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -55 && newData.val() <= 125)))"
+            },
+            "2": {
+              ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -55 && newData.val() <= 125)))"
+            },
+            "3": {
+              ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -55 && newData.val() <= 125)))"
+            },
+            "$other": {
+              ".validate": false
+            }
+          },
+          "R": {
+            ".validate": "newData.hasChildren(['0', '1', '2', '3'])",
+            "0": {
+              ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -55 && newData.val() <= 125)))"
+            },
+            "1": {
+              ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -55 && newData.val() <= 125)))"
+            },
+            "2": {
+              ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -55 && newData.val() <= 125)))"
+            },
+            "3": {
+              ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -55 && newData.val() <= 125)))"
+            },
+            "$other": {
+              ".validate": false
+            }
+          },
+          "fsrL": {
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 4095"
+          },
+          "fsrR": {
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 4095"
+          },
+          "standing": {
+            ".validate": "newData.isBoolean()"
+          },
+          "progress": {
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100"
+          },
+          "elapsedSec": {
+            ".validate": "newData.isNumber() && newData.val() >= 0 && ($dev !== 'khatwa-demo' || newData.val() <= 600)"
+          },
+          "ts": {
+            ".validate": "newData.isNumber() && newData.val() <= now + 60000"
+          },
+          "$other": {
+            ".validate": false
+          }
         },
         "scans": {
-          ".write": "auth != null && !newData.exists()",
-          ".indexOn": ["ts"],
+          ".indexOn": [
+            "ts"
+          ],
           "$scan": {
-            ".write": "auth != null",
-            ".validate": "newData.hasChildren(['L', 'R', 'ts', 'source']) && newData.child('ts').isNumber() && newData.child('ts').val() <= now + 60000 && newData.child('L').hasChildren(['0','1','2','3']) && newData.child('R').hasChildren(['0','1','2','3'])"
+            ".write": "auth != null && (auth.uid === 'J3rETaXXaDQS2GkWg9PHH4OcX1a2' || (auth.uid === 'DQ65EfL8c6M52ruhV2cebwwkvtC2' && $dev === 'khatwa-demo')) && !data.exists()",
+            ".validate": "newData.hasChildren(['L', 'R', 'ts', 'source', 'stable', 'standingOk'])",
+            "L": {
+              ".validate": "newData.hasChildren(['0', '1', '2', '3'])",
+              "0": {
+                ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -55 && newData.val() <= 125)))"
+              },
+              "1": {
+                ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -55 && newData.val() <= 125)))"
+              },
+              "2": {
+                ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -55 && newData.val() <= 125)))"
+              },
+              "3": {
+                ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -55 && newData.val() <= 125)))"
+              },
+              "$other": {
+                ".validate": false
+              }
+            },
+            "R": {
+              ".validate": "newData.hasChildren(['0', '1', '2', '3'])",
+              "0": {
+                ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -55 && newData.val() <= 125)))"
+              },
+              "1": {
+                ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -55 && newData.val() <= 125)))"
+              },
+              "2": {
+                ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -55 && newData.val() <= 125)))"
+              },
+              "3": {
+                ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -55 && newData.val() <= 125)))"
+              },
+              "$other": {
+                ".validate": false
+              }
+            },
+            "diff": {
+              ".validate": "newData.hasChildren(['0', '1', '2', '3'])",
+              "0": {
+                ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -180 && newData.val() <= 180)))"
+              },
+              "1": {
+                ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -180 && newData.val() <= 180)))"
+              },
+              "2": {
+                ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -180 && newData.val() <= 180)))"
+              },
+              "3": {
+                ".validate": "newData.isNumber() && ($dev !== 'khatwa-demo' || (newData.val() === -127 || (newData.val() >= -180 && newData.val() <= 180)))"
+              },
+              "$other": {
+                ".validate": false
+              }
+            },
+            "standingOk": {
+              ".validate": "newData.isBoolean()"
+            },
+            "stable": {
+              ".validate": "newData.isBoolean()"
+            },
+            "durationSec": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 600"
+            },
+            "faults": {
+              "$i": {
+                ".validate": "newData.isString() && newData.val().matches(/^[LR][0-3]$/) && ($dev !== 'khatwa-demo' || $i.matches(/^[0-7]$/))"
+              }
+            },
+            "source": {
+              ".validate": "newData.val() === 'esp32' || newData.val() === 'sim'"
+            },
+            "firmware": {
+              ".validate": "newData.isString() && newData.val().length <= 32"
+            },
+            "demoDay": {
+              ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 365 && ($dev !== 'khatwa-demo' || false)"
+            },
+            "backfill": {
+              ".validate": "newData.isBoolean() && ($dev !== 'khatwa-demo' || false)"
+            },
+            "scenario": {
+              ".validate": "newData.isString() && newData.val().length <= 32 && ($dev !== 'khatwa-demo' || false)"
+            },
+            "ts": {
+              ".validate": "newData.isNumber() && newData.val() <= now + 60000 && ($dev !== 'khatwa-demo' || newData.val() >= now - 86400000)"
+            },
+            "$other": {
+              ".validate": false
+            }
           }
         },
         "events": {
-          ".write": "auth != null && !newData.exists()",
-          ".indexOn": ["ts"],
+          ".indexOn": [
+            "ts"
+          ],
           "$ev": {
-            ".write": "auth != null",
-            ".validate": "newData.hasChildren(['kind', 'ts'])"
+            ".write": "auth != null && auth.uid !== 'DQ65EfL8c6M52ruhV2cebwwkvtC2' && !data.exists()",
+            ".validate": "newData.hasChildren(['kind', 'ts'])",
+            "kind": {
+              ".validate": "newData.val() === 'quickcheck' || newData.val() === 'redflag' || newData.val() === 'photo' || newData.val() === 'family_ack' || newData.val() === 'clinic_ack' || newData.val() === 'mode' || newData.val() === 'escalation' || newData.val() === 'booking' || newData.val() === 'reminder' || newData.val() === 'question' || newData.val() === 'message'"
+            },
+            "day": {
+              ".validate": "newData.isString() && newData.val().length <= 12"
+            },
+            "ts": {
+              ".validate": "newData.isNumber() && newData.val() <= now + 60000"
+            },
+            "data": {
+              "site": {
+                "foot": {
+                  ".validate": "newData.val() === 'L' || newData.val() === 'R'"
+                },
+                "i": {
+                  ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 3"
+                },
+                "$other": {
+                  ".validate": false
+                }
+              },
+              "$k": {
+                ".validate": "(newData.isString() && newData.val().length <= 600) || newData.isNumber() || newData.isBoolean()"
+              }
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        },
+        "photos": {
+          ".indexOn": [
+            "ts"
+          ],
+          "$ph": {
+            ".write": "auth != null && auth.uid !== 'DQ65EfL8c6M52ruhV2cebwwkvtC2' && !data.exists()",
+            ".validate": "newData.hasChildren(['role', 'jpeg', 'ts'])",
+            "role": {
+              ".validate": "newData.val() === 'base' || newData.val() === 'today'"
+            },
+            "jpeg": {
+              ".validate": "newData.isString() && newData.val().beginsWith('data:image/jpeg;base64,') && newData.val().length <= 90000"
+            },
+            "day": {
+              ".validate": "newData.isString() && newData.val().length <= 12"
+            },
+            "site": {
+              "foot": {
+                ".validate": "newData.val() === 'L' || newData.val() === 'R'"
+              },
+              "i": {
+                ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 3"
+              },
+              "$other": {
+                ".validate": false
+              }
+            },
+            "ts": {
+              ".validate": "newData.isNumber() && newData.val() <= now + 60000"
+            },
+            "$other": {
+              ".validate": false
+            }
           }
         },
         "calibration": {
-          ".write": "auth != null"
+          ".write": "auth != null && auth.uid === 'J3rETaXXaDQS2GkWg9PHH4OcX1a2'"
+        },
+        "$other": {
+          ".validate": false
         }
       }
     }

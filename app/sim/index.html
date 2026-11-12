@@ -43,9 +43,16 @@
   <div id="cfgWarn" class="warnbox" hidden>ما فيه إعدادات Firebase. عبّئ <code>app/js/firebase-config.js</code> (الشرح في docs/SETUP.md) وحدّث الصفحة.</div>
 
   <section class="card">
-    <h2>الاتصال</h2>
+    <h2>الاتصال بحساب الجهاز</h2>
+    <p class="note">قواعد قاعدة البيانات تسمح بكتابة القراءات لحساب الجهاز فقط. اكتب كلمة مرور حساب الجهاز (نفسها في <code>secrets.h</code>). ما تنحفظ في الكود ولا في المتصفح.</p>
+    <form id="loginForm" class="row">
+      <input id="devEmail" type="email" autocomplete="username" value="device-khatwa01@khatwa.app" aria-label="بريد حساب الجهاز" style="min-width:230px">
+      <input id="devPass" type="password" autocomplete="current-password" placeholder="كلمة المرور" aria-label="كلمة مرور حساب الجهاز">
+      <button class="main" id="loginBtn" type="submit">دخول</button>
+    </form>
     <div class="row">
       <span>الحالة: <span id="conn" class="pill">غير متصل</span></span>
+      <span>الجهاز: <code id="devId"></code></span>
       <label><input type="checkbox" id="hb" checked> الجهاز الافتراضي «شغّال» (نبضة كل 10 ثواني)</label>
     </div>
   </section>
@@ -95,8 +102,9 @@
     <h2>أدوات للتطوير</h2>
     <div class="row">
       <button id="backfill">ولّد ٧ أيام سابقة (آخرها نقطة ساخنة يومين)</button>
-      <button class="danger" id="wipe">امسح كل القراءات والأحداث</button>
+      <button class="danger" id="wipe" disabled title="قواعد الحماية تمنع الحذف">امسح كل القراءات والأحداث</button>
     </div>
+    <p class="note">المسح متوقف: قواعد الحماية تمنع حذف القراءات والأحداث (إضافة فقط). للتجربة النظيفة استخدم رقم جهاز ثاني: <code>?dev=khatwa-test</code>.</p>
     <p class="note">الأيام السابقة تُكتب بوقت قديم وعليها <code>backfill: true</code> عشان شاشة السجل يكون فيها بيانات. لا تستخدمها في الفيديو كأنها قراءات حقيقية.</p>
   </section>
 
@@ -111,6 +119,13 @@ import * as K from '../js/khatwa-firebase.js';
 import { SITES, N, THRESH } from '../js/rules.js';
 
 const $ = id => document.getElementById(id);
+// رقم الجهاز من الرابط (?dev=khatwa-test) عشان التجارب ما تختلط بالسجادة الحقيقية (ملاحظة المراجعة R11)
+const qDev = new URLSearchParams(location.search).get('dev');
+const DEV = qDev && /^khatwa-[a-z0-9-]{1,24}$/.test(qDev) ? qDev : 'khatwa-01';
+const writeLive = o => K.writeLive(o, DEV);
+const writeStatus = o => K.writeStatus(o, DEV);
+const pushScan = o => K.pushScan(o, DEV);
+const pushScanAt = (o, t) => K.pushScanAt(o, t, DEV);
 const FW = 'sim-0.1.0';
 const log = m => { const t = new Date().toLocaleTimeString('en-GB'); $('log').textContent = `[${t}] ${m}\n` + $('log').textContent; };
 const r2 = v => Math.round(v * 100) / 100;
@@ -131,7 +146,7 @@ const SCN = {
 const FSR_ON = 1800, FSR_MIN = 600;      // نفس العتبات اللي بنستخدمها في ESP32 (تُعدّل بعد التجربة)
 const STABLE_WIN = 5, STABLE_DELTA = 0.1, MAX_SEC = 90, MIN_SEC = 8;
 
-let timer = null, hbTimer = null, sess = null;
+let timer = null, hbTimer = null, sess = null, loggedIn = false, holding = false;
 
 function render(L, R, fsrL, fsrR, elapsed) {
   $('tbody').innerHTML = SITES.map((s, i) => {
@@ -150,6 +165,7 @@ function startScan() {
   const start = scn.wet ? 21.5 : 26.0;    // السجادة تبدأ بحرارة الغرفة، والمبللة أبرد (تبخّر)
   const target = { L: SKIN.slice(), R: SKIN.map((v, i) => v + scn.dR[i]) };
   if (scn.wet) { target.L = target.L.map(v => v - 1.2); target.R = target.R.map(v => v - 1.2); }
+  holding = false;
   sess = { scn, tau, start, target, t: 0, settle: 0, hist: [], moved: false, scnKey: $('scn').value };
   $('start').disabled = true; $('stop').disabled = false;
   log(`بداية فحص: ${$('scn').selectedOptions[0].textContent}`);
@@ -175,19 +191,19 @@ async function tick() {
 
   if (s.t <= 2) {   // كشف الوجود والتحقق من القدمين
     render(null, null, fsrL, fsrR, s.t);
-    await K.writeLive({ phase: 'placing', msg: 'تحقق من الوقوف', L: [0, 0, 0, 0], R: [0, 0, 0, 0], fsrL, fsrR, standing: false, progress: 0, elapsedSec: s.t });
+    await writeLive({ phase: 'placing', msg: 'تحقق من الوقوف', L: [0, 0, 0, 0], R: [0, 0, 0, 0], fsrL, fsrR, standing: false, progress: 0, elapsedSec: s.t });
     setPhase('placing', 'يتحقق من الوقوف');
     return;
   }
   if (fsrL < FSR_MIN || fsrR < FSR_MIN) {
     if (s.scn.oneFoot || s.t > 12 || !s.scn.move) {
-      await K.writeLive({ phase: 'error', msg: 'قدم وحدة أو القدم مو في مكانها', L: [0, 0, 0, 0], R: [0, 0, 0, 0], fsrL, fsrR, standing: false, progress: 0, elapsedSec: s.t });
+      await writeLive({ phase: 'error', msg: 'قدم وحدة أو القدم مو في مكانها', L: [0, 0, 0, 0], R: [0, 0, 0, 0], fsrL, fsrR, standing: false, progress: 0, elapsedSec: s.t });
       setPhase('error', 'مرفوض: قدم وحدة. ما تسجّلت قراءة', 'bad');
-      log('رفض: حساس ضغط ما انضغط (الجهاز يشغّل الضوء الأحمر). ما فيه scan.');
-      return endScan(false);
+      log('رفض: حساس ضغط ما انضغط (الجهاز يشغّل الضوء الأحمر). ما فيه scan. الخطأ يبقى لين تضغط «انزل من السجادة» (مثل الجهاز).');
+      return endScan(false, true);
     }
     s.settle = Math.max(0, s.settle - 4); s.hist = [];      // حركة: يعاد عدّ الاستقرار
-    await K.writeLive({ phase: 'settling', msg: 'اكتُشفت حركة، اثبت', L: [0, 0, 0, 0], R: [0, 0, 0, 0], fsrL, fsrR, standing: true, progress: 0, elapsedSec: s.t });
+    await writeLive({ phase: 'settling', msg: 'اكتُشفت حركة، اثبت', L: [0, 0, 0, 0], R: [0, 0, 0, 0], fsrL, fsrR, standing: true, progress: 0, elapsedSec: s.t });
     setPhase('settling', 'حركة! يعيد عدّ الثبات', 'warn');
     log('حركة: يعاد عدّ الاستقرار');
     return;
@@ -202,7 +218,7 @@ async function tick() {
     [...Array(2 * N).keys()].every(k => { const col = okVals(s.hist.map(h => h[k])); return !col.length || Math.max(...col) - Math.min(...col) < STABLE_DELTA; });
   const progress = Math.min(99, Math.round((s.settle / (s.tau * 4)) * 100));
   render(L, R, fsrL, fsrR, s.t);
-  await K.writeLive({ phase: 'settling', L, R, fsrL, fsrR, standing: true, progress, elapsedSec: s.t });
+  await writeLive({ phase: 'settling', L, R, fsrL, fsrR, standing: true, progress, elapsedSec: s.t });
   setPhase('settling', `ينتظر الاستقرار… ${s.t} ث`);
   $('prog').style.width = progress + '%';
 
@@ -211,8 +227,8 @@ async function tick() {
     const faults = []; L.forEach((v, i) => v <= -100 && faults.push('L' + i)); R.forEach((v, i) => v <= -100 && faults.push('R' + i));
     const scan = { L, R, diff, standingOk: true, stable, durationSec: s.t, faults, source: 'sim', firmware: FW, scenario: s.scnKey };
     if ($('demoOn').checked) scan.demoDay = +$('demoDay').value;
-    await K.pushScan(scan);
-    await K.writeLive({ phase: 'done', msg: stable ? 'تم' : 'انتهى الوقت بدون استقرار', L, R, fsrL, fsrR, standing: true, progress: 100, elapsedSec: s.t });
+    await pushScan(scan);
+    await writeLive({ phase: 'done', msg: stable ? 'تم' : 'انتهى الوقت بدون استقرار', L, R, fsrL, fsrR, standing: true, progress: 100, elapsedSec: s.t });
     $('prog').style.width = '100%';
     setPhase('done', stable ? `تم في ${s.t} ث وتسجّلت القراءة` : 'انتهى الوقت بدون استقرار (stable=false)', stable ? 'ok' : 'warn');
     log(`scan مكتوب: stable=${stable}, ${s.t}s, demoDay=${scan.demoDay ?? '-'}`);
@@ -221,15 +237,18 @@ async function tick() {
   }
 }
 
-async function endScan(written) {
+async function endScan(written, hold = false) {
   clearInterval(timer); timer = null; sess = null;
-  $('start').disabled = false; $('stop').disabled = true;
-  setTimeout(async () => { if (!sess) { await K.writeLive({ phase: 'idle', L: [0, 0, 0, 0], R: [0, 0, 0, 0], fsrL: 0, fsrR: 0, standing: false, progress: 0, elapsedSec: 0 }); if (!written) setPhase('idle', 'ينتظر'); } }, 6000);
+  $('start').disabled = false; $('stop').disabled = !hold;
+  holding = hold; // like the real mat: the one-foot error stays until the patient steps off
+  if (hold) return;
+  setTimeout(async () => { if (!sess) { await writeLive({ phase: 'idle', L: [0, 0, 0, 0], R: [0, 0, 0, 0], fsrL: 0, fsrR: 0, standing: false, progress: 0, elapsedSec: 0 }); if (!written) setPhase('idle', 'ينتظر'); } }, 6000);
 }
 
 async function heartbeat() {
-  if (!$('hb').checked) { await K.writeStatus({ online: false, firmware: FW, source: 'sim' }); return; }
-  await K.writeStatus({ online: true, firmware: FW, source: 'sim', rssi: -55 });
+  if (!loggedIn) return;
+  if (!$('hb').checked) { await writeStatus({ online: false, firmware: FW, source: 'sim' }); return; }
+  await writeStatus({ online: true, firmware: FW, source: 'sim', rssi: -55 });
 }
 
 async function backfill() {
@@ -240,32 +259,43 @@ async function backfill() {
     const dR = hot ? [0.1, 2.5 + Math.random() * 0.3, 0.1, 0] : [Math.random() * 0.6 - 0.3, Math.random() * 0.6 - 0.3, Math.random() * 0.6 - 0.3, Math.random() * 0.6 - 0.3];
     const L = SKIN.map(v => r2(v + Math.random() * 0.2)), R = L.map((v, i) => r2(v + dR[i]));
     const scan = { L, R, diff: L.map((v, i) => r2(R[i] - v)), standingOk: true, stable: true, durationSec: 40 + Math.round(Math.random() * 15), faults: [], source: 'sim', firmware: FW, backfill: true };
-    await K.pushScanAt(scan, now - k * DAY);   // ts صريح (قديم) بدل وقت السيرفر
+    await pushScanAt(scan, now - k * DAY);   // ts صريح (قديم) بدل وقت السيرفر
   }
   log('تمت كتابة ٧ أيام سابقة (backfill)');
 }
 
 async function main() {
   render(null, null);
+  $('devId').textContent = DEV;
+  $('start').disabled = true; $('backfill').disabled = true;
   if (!K.configured()) { $('cfgWarn').hidden = false; return; }
-  try {
-    const { uid } = await K.init();
-    $('conn').textContent = 'متصل'; $('conn').className = 'pill ok';
-    log(`دخول مجهول uid=${uid.slice(0, 8)}…`);
-    K.subscribe({});            // عشان فرق ساعة السيرفر
-    await heartbeat(); hbTimer = setInterval(heartbeat, 10000);
-    await K.writeLive({ phase: 'idle', L: [0, 0, 0, 0], R: [0, 0, 0, 0], fsrL: 0, fsrR: 0, standing: false, progress: 0, elapsedSec: 0 });
-  } catch (e) {
-    $('conn').textContent = 'فشل: ' + e.message; $('conn').className = 'pill bad'; log('خطأ: ' + e.message);
-  }
+  $('loginForm').onsubmit = async e => {
+    e.preventDefault();
+    $('loginBtn').disabled = true;
+    try {
+      const { uid } = await K.initDevice($('devEmail').value.trim(), $('devPass').value);
+      $('devPass').value = '';
+      loggedIn = true;
+      $('conn').textContent = 'متصل بحساب الجهاز'; $('conn').className = 'pill ok';
+      log(`دخول حساب الجهاز uid=${uid.slice(0, 8)}… · الجهاز ${DEV}`);
+      $('loginForm').hidden = true;
+      $('start').disabled = false; $('backfill').disabled = false;
+      K.subscribe({}, DEV);            // عشان فرق ساعة السيرفر
+      await heartbeat(); hbTimer = setInterval(heartbeat, 10000);
+      await writeLive({ phase: 'idle', L: [0, 0, 0, 0], R: [0, 0, 0, 0], fsrL: 0, fsrR: 0, standing: false, progress: 0, elapsedSec: 0 });
+    } catch (err) {
+      $('loginBtn').disabled = false;
+      $('conn').textContent = 'فشل الدخول: تأكد من كلمة المرور'; $('conn').className = 'pill bad'; log('خطأ: ' + (err.code || err.message));
+    }
+  };
 }
 
 $('start').onclick = startScan;
-$('stop').onclick = async () => { log('نزل من السجادة قبل الانتهاء: ما تسجّلت قراءة'); await K.writeLive({ phase: 'error', msg: 'نزل قبل الانتهاء', L: [0, 0, 0, 0], R: [0, 0, 0, 0], fsrL: 0, fsrR: 0, standing: false, progress: 0, elapsedSec: 0 }); setPhase('error', 'أُلغي', 'warn'); endScan(false); };
+$('stop').onclick = async () => { if (holding) { holding = false; $('stop').disabled = true; log('نزل من السجادة'); await writeLive({ phase: 'idle', L: [0, 0, 0, 0], R: [0, 0, 0, 0], fsrL: 0, fsrR: 0, standing: false, progress: 0, elapsedSec: 0 }); setPhase('idle', 'ينتظر'); return; } log('نزل من السجادة قبل الانتهاء: ما تسجّلت قراءة'); await writeLive({ phase: 'error', msg: 'نزل قبل الانتهاء', L: [0, 0, 0, 0], R: [0, 0, 0, 0], fsrL: 0, fsrR: 0, standing: false, progress: 0, elapsedSec: 0 }); setPhase('error', 'أُلغي', 'warn'); endScan(false); };
 $('hb').onchange = heartbeat;
 $('backfill').onclick = backfill;
-$('wipe').onclick = async () => { if (!confirm('تمسح كل القراءات والأحداث للجهاز khatwa-01؟ ما ينفع ترجعها.')) return; await K.clearScans(); await K.clearEvents(); log('انمسحت القراءات والأحداث'); };
-window.addEventListener('beforeunload', () => { try { K.writeStatus({ online: false }); } catch (e) {} });
+
+window.addEventListener('beforeunload', () => { try { if (loggedIn) writeStatus({ online: false }); } catch (e) {} });
 main();
 </script>
 </body>

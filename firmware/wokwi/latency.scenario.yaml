@@ -1,0 +1,23 @@
+# One stand on the virtual mat per session (free plan: 5-minute sessions; the script runs 5 sessions) (used to measure Wokwi → Firebase → app latency).
+# Run: wokwi-cli . --scenario latency.scenario.yaml --timeout 280000   (see ../../web/scripts/measure-latency.mjs)
+name: 'Khatwa latency: 1 stand'
+version: 1
+author: 'Khatwa team'
+steps:
+  - wait-serial: 'auth: ready'
+  - delay: 4000ms
+  # stand 1: both heels down, right MTH1 +2.6 °C
+  - set-control:
+      part-id: tR1
+      name: temperature
+      value: 33.3
+  - set-control:
+      part-id: fsrL
+      name: position
+      value: 1
+  - set-control:
+      part-id: fsrR
+      name: position
+      value: 1
+  - wait-serial: 'scan saved'
+  - delay: 3000ms

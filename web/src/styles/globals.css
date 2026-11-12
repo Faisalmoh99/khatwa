@@ -1,0 +1,63 @@
+@import '@fontsource/ibm-plex-sans-arabic/arabic-400.css';
+@import '@fontsource/ibm-plex-sans-arabic/arabic-600.css';
+@import '@fontsource/ibm-plex-sans-arabic/latin-400.css';
+@import '@fontsource/ibm-plex-sans-arabic/latin-600.css';
+@import './tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    overflow-x: clip;
+    background: var(--kh-bg);
+  }
+  body {
+    @apply bg-bg font-sans text-base text-ink antialiased;
+    min-height: 100dvh;
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* A one-column grid must never grow to fit unbreakable content (truncated text, long chips):
+     the implicit column would be "auto" = min-content. Grids with explicit columns are untouched. */
+  [class~='grid']:not([class*='grid-cols']) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  /* Safety net: never allow sideways scrolling on a phone (RTL overflow goes to the left). */
+  #root {
+    overflow-x: clip;
+  }
+  :focus-visible {
+    outline: 3px solid var(--kh-brand-500);
+    outline-offset: 2px;
+  }
+  /* Numbers are always isolated left-to-right so "-1.2" never flips to "1.2-" in RTL */
+  .num {
+    direction: ltr;
+    unicode-bidi: isolate;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Visit report printing: A4, white, no app chrome. */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+  html,
+  body {
+    background: #fff !important;
+    font-size: 12pt;
+  }
+  #root {
+    overflow: visible;
+  }
+}
+
+/* Tour: the element the current step points at. */
+.tour-spot {
+  outline: 4px solid var(--kh-brand-500);
+  outline-offset: 4px;
+}

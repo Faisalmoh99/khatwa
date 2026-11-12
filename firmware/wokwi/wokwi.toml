@@ -1,0 +1,5 @@
+# Wokwi CLI / VS Code: runs the firmware built by ./build.sh (the real khatwa_esp32 sketch, demo secrets).
+[wokwi]
+version = 1
+firmware = 'build/khatwa_esp32.ino.merged.bin'
+elf = 'build/khatwa_esp32.ino.elf'

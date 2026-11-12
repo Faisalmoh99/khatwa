@@ -6,3 +6,22 @@ node_modules/
 
 # Local Netlify folder
 .netlify
+firmware/wokwi/build/
+deliverables/
+tools/video/raw/
+tools/video/tmp/
+tools/video/cards/
+tools/video/film-log.txt
+tools/video/clips-log.txt
+tools/video/clips-raw/
+tools/video/tmp-clips/
+tools/video/frame/
+tools/video/allshots-raw/
+tools/video/tmp-sheet/
+tools/video/flow-raw/
+tools/video/tmp-flow/
+tools/video/frame-flow/
+tools/video/raw-16x9/
+tools/video/frame-16x9/
+tools/video/tmp-16x9/
+tools/video/*-log.txt

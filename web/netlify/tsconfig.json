@@ -1,0 +1,5 @@
+{
+  "extends": "../tsconfig.node.json",
+  "compilerOptions": { "types": ["node"], "lib": ["ES2023", "DOM"], "noEmit": true },
+  "include": ["./functions/*.mts", "../src/lib/agent/aiCodes.ts"]
+}

@@ -1,57 +1,170 @@
-# خطوة (Khatwa)
+# Khatwa (خطوة)
 
-سجادة توضع عند مكان الوضوء، يقف عليها مريض السكري يوميًا قبل الوضوء. تقيس حرارة 4 نقاط في كل قدم وتقارن القدمين. إذا صار الفرق في نفس النقطة **أكبر من 2.2°م ليومين متتاليين** (توصية IWGDF)، يُنبَّه المريض ثم العائلة ثم العيادة بالعربي.
+[![CI](https://github.com/Faisalmoh99/khatwa/actions/workflows/ci.yml/badge.svg?branch=web-app)](https://github.com/Faisalmoh99/khatwa/actions/workflows/ci.yml)
 
-> أداة مراقبة تدعم الإحالة، **مو أداة تشخيص**. النموذج ما اختُبر سريريًا.
+**A mat placed where people do wudu.** A person with diabetes stands on it once a day, before wudu. It is designed to measure the temperature of 4 points on each foot (plus heel pressure to check the person is standing) and compare the two feet. When the same point is **more than 2.2 °C warmer on the same foot for two consecutive days** (IWGDF guidance), the app alerts the patient, then the family, then the clinic, in Arabic.
 
-فريق «خطوة»، MEDATHON 2026 (SYHF، جدة).
+> **A monitoring tool that supports referral. Not a diagnostic device.** The prototype has not been clinically tested.
+>
+> **Designed for 4 temperature sensors per foot + heel pressure. The physical mat is being built for the finals.**
+> «مصمم لـ 4 حساسات حرارة لكل قدم + ضغط الكعب. الجهاز المادي يُبنى للنهائيات»
+> What runs today: the app, Rafiq (the assistant), and the real ESP32 firmware on a virtual circuit (Wokwi). The demo link opens on simulated data.
 
-## المكوّنات
-| الجزء | التقنية |
+Team Khatwa · MEDATHON 2026 (SYHF, Jeddah).
+
+## Try it
+
+| | Link |
 |---|---|
-| الجهاز | ESP32 + 8 حساسات DS18B20 (4 لكل قدم) + حساس ضغط تحت كل كعب + ضوء أخضر/أحمر + جرس |
-| السحابة | Firebase Realtime Database |
-| التطبيق | صفحة ويب (PWA) بالعربي، تفتح من الباركود بدون تنزيل |
+| Project page (films + demo video) | **https://khatwa-medathon.netlify.app** |
+| The app (opens on simulated data; the button on the project page starts the guided tour) | https://khatwa-app-sa.netlify.app · tour directly: [`/?tour=1`](https://khatwa-app-sa.netlify.app/?tour=1) |
+| Virtual mat: the real ESP32 firmware on a Wokwi circuit | https://wokwi.com/projects/480390288294528001 |
 
-## هيكل المستودع
-```
-app/            التطبيق (ينشر على Netlify)
-  index.html    التطبيق
-  js/rules.js   محرك القاعدة (مع اختبارات)
-  sim/          محاكي السجادة (قراءات وهمية بنفس شكل الجهاز)
-  dev/live.html صفحة فحص البث المباشر
-firmware/       كود ESP32
-firebase/       قواعد قاعدة البيانات
-docs/           شكل البيانات، التجهيز، الخطة
-tests/          اختبارات القاعدة
-```
+**The guided tour** («جرّب السيناريو», no sign-up): two scans on the simulated mat (day 1 yellow, day 2 orange by the IWGDF rule) → WhatsApp message to the family → the family screen → the patient tells Rafiq «رجلي متورمة وفيها شي ينز» (red) → the clinic list with Abu Saad red and first → the visit report. Nothing is written to Firebase.
 
-## التشغيل
-```bash
-npm test        # اختبارات القاعدة
-npm run dev     # سيرفر محلي على localhost:8080
-```
-التجهيز الكامل في [docs/SETUP.md](docs/SETUP.md). شكل البيانات في [docs/DATA_SCHEMA.md](docs/DATA_SCHEMA.md).
+**The virtual mat:** open the Wokwi link and press ▶. In the app: Settings → «مصدر البيانات» → «السجادة الافتراضية (Wokwi)». In Wokwi, turn both heel potentiometers above half (standing), raise «R MTH1» by about 2.6 °C, and the scan appears in the app. Details: [`firmware/wokwi/README.md`](firmware/wokwi/README.md).
 
-## المبني والقادم
-| مبني الآن | إصدار قادم |
-|---|---|
-| 4 حساسات حرارة لكل قدم | التصميم الكامل بنقاط أكثر |
-| حساس ضغط لكل كعب (كشف الوقوف) | خريطة ضغط لكل القدم |
-| قاعدة IWGDF + سلّم المتابعة | قياس التروية |
-| تنبيه العائلة برسالة واتساب جاهزة | تحليل الصور بالذكاء الاصطناعي |
-| | حساسات طبية بدقة ±0.1°م (TMP117) |
-
-## نتائج الاختبارات
-_تُعبّأ بعد القياس (11–12 نوفمبر)._
-
-| الاختبار | الطريقة | الهدف | النتيجة |
+| Home | Live scan | Result | Rafiq (assistant) |
 |---|---|---|---|
-| المعايرة | كل الحساسات في ماء 35–37°م مع ترمومتر طبي Beurer FT09 | ضمن ±0.5°م | |
-| الدقة | مقارنة كل نقطة بالترمومتر | متوسط الفرق ≤ 0.5°م | |
-| النقطة الساخنة | كمادة دافئة على نقطة قبل الوقوف، 10 مرات | 10/10 | |
-| زمن الفحص | 10 فحوصات | أقل من 60 ثانية | |
-| القدم المبللة | مبللة، بعد المنشفة، بعد 30 ثانية | تحديد التعليمة | |
+| ![Home](web/e2e/__screenshots__/25-home-orange.png) | ![Live scan](web/e2e/__screenshots__/22-scan-measuring.png) | ![Result](web/e2e/__screenshots__/24-result-orange.png) | ![Assistant](web/e2e/__screenshots__/41-assistant-redflag.png) |
+| **History** | **Clinic** | **Visit report** | **Family** |
+| ![History](web/e2e/__screenshots__/44-history.png) | ![Clinic](web/e2e/__screenshots__/51-clinic-patients.png) | ![Report](web/e2e/__screenshots__/55-report.png) | ![Family](web/e2e/__screenshots__/50-family.png) |
 
-## الشفافية
-استُخدم الذكاء الاصطناعي (Claude) في كتابة أجزاء من الكود والوثائق. الأرقام في «اختبار القاعدة على المرضى الاصطناعيين» من افتراضاتنا وليست بيانات مرضى.
+All screenshots are generated by the Playwright tests at iPhone size (390×844) and carry the «بيانات محاكاة» (simulated data) banner where they use the simulator.
+
+## How it works
+
+```mermaid
+flowchart LR
+  subgraph Mat["Mat (ESP32)"]
+    S["8 × DS18B20<br/>(4 per foot)"] --> E[ESP32]
+    P["2 heel pressure sensors<br/>(standing check only)"] --> E
+  end
+  E -- "status · live · scans<br/>(device account)" --> F[("Firebase<br/>Realtime Database")]
+  SIM["/sim/ simulator<br/>(device account)"] -. same shape .-> F
+  F --> DS{{DataSource}}
+  SS["SimulationSource<br/>(in the browser)"] --> DS
+  US["SerialSource<br/>(USB, 115200)"] --> DS
+  DS --> ST["Zustand store"]
+  ST --> R["rules.ts<br/>(IWGDF rule)"]
+  R --> L["level.ts<br/>(+ patient reports, pause modes)"]
+  L --> UI["Screens<br/>patient · family · clinic"]
+  UI -- "events · photos<br/>(append only)" --> F
+```
+
+- **The device measures and sends. It never decides.** The decision is made in the app by one rule engine, `web/src/lib/rules/rules.ts` (a TypeScript port of `app/js/rules.js`, kept identical by a parity test).
+- **Red only comes from the patient** (a wound or blister in the quick check, or a red flag in chat). The sensors can raise yellow or orange, never red.
+- Every screen depends on one `DataSource` interface. Switching between the real mat, the in-browser simulator and the USB cable never changes a screen; anything that is not the real mat shows a permanent banner.
+- Alerts are written once as `escalation` events: to whom, when (server time) and why. The clinic reads them as an audit log.
+
+More detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · data contract: [docs/DATA_SCHEMA.md](docs/DATA_SCHEMA.md).
+
+## Built and tested / Designed / Next
+
+| Built and tested (evidence in this repo) | Designed, not built yet | Next |
+|---|---|---|
+| Web app (PWA): patient, family and clinic screens; opens offline. Unit + e2e tests at iPhone size, accessibility checks (axe) | The physical mat: 4 × DS18B20 per foot + 1 pressure sensor under each heel, ESP32, LEDs, buzzer (parts are ordered only if we reach the finals) | Build the mat for the finals, then calibrate it against a medical thermometer and measure accuracy and scan time (no such figure is claimed before that) |
+| IWGDF rule engine (> 2.2 °C, same point, same foot, 2 consecutive days) with quality checks: one foot, movement, wet foot, faulty sensor, whole-foot difference | Pressure map of the whole foot (the heel sensor only checks standing) | Pilot with a clinic, after ethics approval |
+| Adherence ladder (reminder → family → clinic), pause modes, escalation audit log | Perfusion measurement | Real push notifications (today: in-app reminder) |
+| Rafiq: fixed templates + Claude Haiku for free text (never sets the level), Arabic voice | AI analysis of foot photos (photos are only stored for the clinic) | Android app (Capacitor) |
+| Family WhatsApp message, clinic list, visit report with QR and PDF | Medical-grade sensors (TMP117) | Data hosting in Saudi Arabia + PDPL review |
+| ESP32 firmware: compiles for ESP32, core logic tested on the computer (g++), JSON checked against the database rules | | |
+| Virtual mat: the same firmware on a [Wokwi circuit](https://wokwi.com/projects/480390288294528001) (8 × DS18B20, 2 potentiometers standing in for the heel sensors) writing to Firebase, shown in the app. **Measured: scan sent → shown in the app ≈ 0.3 s (median 342 ms of 5 runs, simulated device, not the physical mat)** (method and limits in [`firmware/wokwi/README.md`](firmware/wokwi/README.md)) | | |
+| A real firmware bug found on Wokwi and fixed (see below) | | |
+| Rule lab on synthetic patients (labelled "simulation, numbers from our assumptions") | | |
+
+Everything the demo shows comes from the simulator or the Wokwi virtual mat, and every screen says so in a banner.
+
+### A firmware bug the virtual mat caught
+
+Running the unchanged firmware on Wokwi printed `# scan saved` twice after the first scan: the Firebase library calls the result callback twice for the same push. The queue counter went to −1, and **every scan after the first stayed in memory and was never sent** until a reboot. On a real mat this would have silently lost the patient's readings from day 2 on. The fix (`if (!scanBusy) return;` in `onScan`, commit `bd69bbd`) was checked on Wokwi with two scans in a row; both were saved.
+
+### Tests (all automated, run in CI on every push)
+
+| Suite | Count | Command |
+|---|---|---|
+| Unit tests (Vitest): rule engine + parity with `rules.js`, levels, ladder, escalations, Rafiq, AI function, report, rule lab | **251** | `cd web && npm test` |
+| End-to-end (Playwright, iPhone size): every screen, guided tour, quality scenarios, accessibility (axe), PWA/offline | **92** | `cd web && npm run e2e` |
+| Rules: Firebase database rules on the emulator (20) + legacy rule engine `rules.js` (13) | **33** | `cd web && npm run test:rules` · `npm test` (root) |
+| Firmware core logic and JSON builders (g++ on the computer, no Arduino) | **41** | see [`firmware/README.md`](firmware/README.md) |
+
+The same e2e suite also runs against the live app: `E2E_BASE_URL=https://khatwa-app-sa.netlify.app npm run e2e`.
+
+## Repository
+
+```
+web/                 the app (Vite + React + TypeScript strict + Tailwind)
+  src/lib/rules/     rule engine (rules.ts) + tests
+  src/lib/           level, ladder, escalations, assistant, report, rule lab (pure, unit-tested)
+  src/data/          DataSource + Firebase / Simulation / Serial sources, zod contract
+  src/screens/       patient, family, clinic screens
+  e2e/               Playwright tests and iPhone screenshots
+  scripts/           rules tests (emulator), device data checker, icons, legacy copy
+app/                 first prototype (served at /legacy/), simulator /sim/, /dev/live.html, /story/
+firmware/            ESP32 code (secrets.h is git-ignored)
+firebase/            Realtime Database rules
+docs/                plan, progress, data contract, setup, review, architecture
+tests/               legacy rule tests (node:test)
+```
+
+## Run it
+
+```bash
+cd web
+npm install
+npm run dev                 # http://localhost:5173
+# first visit opens on the simulator with 30 days of simulated history; «جرّب السيناريو» runs the guided tour
+# Settings → «مصدر البيانات»: simulation / the real mat (Firebase) / the virtual mat (Wokwi) / USB
+# Nothing is written to Firebase unless the source is the real mat AND «هذا جوال المريض» is on
+```
+
+| Command (in `web/`) | What it does |
+|---|---|
+| `npm test` | Unit tests (Vitest): rule engine + parity with `rules.js`, levels, ladder, escalations, assistant, report, rule lab |
+| `npm run e2e` | Playwright at iPhone size: every screen, quality scenarios, accessibility (axe), PWA/offline |
+| `E2E_FIREBASE=1 E2E_DEVICE_PASSWORD=… npm run e2e` | Real Firebase: legacy `/sim/` → app live view → result, and an event round trip |
+| `npm run test:rules` | Firebase rules on the local emulator (20 cases, incl. JSON built by the firmware and the public Wokwi demo account) |
+| `npm run check:device` | Read-only check of what the device wrote to Firebase against the data contract |
+| `npm run lint` / `npm run build` | ESLint + Prettier / production build (also copies the legacy pages) |
+
+The legacy rule tests still run from the repo root: `npm test`. CI runs everything on every push.
+
+## Security and data
+
+- Database rules: only the device account can write `status`, `live` and `scans`; scans are append-only; the app can only append `events` and `photos`; nothing can be deleted; every field is type-checked and unknown fields are rejected. Tested on the emulator before deploy.
+- Any text from Firebase is rendered as text, never as HTML (enforced by an ESLint rule).
+- Consent screen with separate opt-ins for photos and family sharing. In this prototype data is stored in Firebase (Europe); a real deployment needs storage in Saudi Arabia and a PDPL review.
+
+## Hosting
+
+| Site | Branch / folder | Deploys |
+|---|---|---|
+| https://khatwa-medathon.netlify.app (project page) | `web-app` / `landing/` | `landing/deploy.sh` (the videos are generated, not in git) |
+| https://khatwa-app-sa.netlify.app (the app) | `web-app` / `web/` | every push to `web-app` (`netlify.toml`) |
+| https://dulcet-blini-8f718e.netlify.app (first prototype, story film at `/story/`, printed QR) | `main` / `app/` | every push to `main` |
+
+## Transparency
+
+- **AI in development:** parts of the code and documentation were written with Claude (Anthropic) under the team's review.
+- **AI in the product:** Claude Haiku is used for two narrow jobs, through a Netlify Function (key kept in Netlify, never in the repo):
+  1. Classifying the patient's **free text** (never buttons) into one of 7 fixed reports (wound, blister, swelling, fever, new pain, redness, none). It is not called when the templates already found a clear red flag. The patient always gets a fixed template reply; when AI and templates disagree, the more serious wins; redness/new pain only asks the patient to confirm in the quick check.
+  2. An optional **doctor summary** of the report numbers, only when "ملخص للطبيب" is pressed, labelled «ملخص آلي، راجع الأرقام».
+
+  **The AI never sets or lowers a risk level** (that is `rules.ts` plus the patient's report). Text ≤ 300 characters, 30 requests per phone per day (enforced in the function); any failure falls back silently to the templates. Photos are never analysed.
+- **Simulated numbers:** the rule lab compares alert rules on synthetic patients; its numbers come from our assumptions, listed on the screen. Virtual clinic patients are labelled «افتراضي».
+
+---
+
+## بالعربي (مختصر)
+
+**خطوة** سجادة عند مكان الوضوء، يقف عليها مريض السكري كل يوم قبل الوضوء. **مصمم لـ 4 حساسات حرارة لكل قدم + ضغط الكعب. الجهاز المادي يُبنى للنهائيات.** وتقارن القدمين. إذا صار الفرق في نفس النقطة **أكبر من 2.2°م ليومين متتاليين** ونفس القدم هي الأسخن (توصية IWGDF)، ننبّه المريض ثم العائلة ثم العيادة.
+
+- **أداة مراقبة تدعم الإحالة، مو تشخيص.** النموذج ما اختُبر سريريًا.
+- **مبني ومجرّب:** التطبيق (المريض والعائلة والعيادة، ويشتغل بدون نت)، وقاعدة IWGDF، وسلّم المتابعة، ورفيق (قوالب ثابتة + Claude Haiku للكلام الحر)، وتقرير الزيارة، وكود السجادة (ESP32) على دائرة افتراضية في Wokwi.
+- **مصمم، ما انبنى:** السجادة نفسها (4 حساسات حرارة لكل قدم + ضغط الكعب). القطع تنطلب إذا وصلنا للنهائيات.
+- **إصدار قادم:** خريطة الضغط، والتروية، وتحليل الصور بالذكاء الاصطناعي، والإشعارات الحقيقية، وحساسات TMP117.
+- **الشفافية:** استُخدم Claude في كتابة أجزاء من الكود والوثائق. وفي التطبيق: Claude Haiku يفهم كلام المريض الحر ويحوّله لواحد من 7 بلاغات ثابتة، ويكتب ملخص اختياري للطبيب. **ما يغيّر مستوى الخطر أبدًا**، والرد للمريض دايمًا من القوالب. أرقام مختبر القاعدة من افتراضاتنا.
+
+**جرّبه:** صفحة المشروع https://khatwa-medathon.netlify.app · التطبيق https://khatwa-app-sa.netlify.app · السجادة الافتراضية https://wokwi.com/projects/480390288294528001
+
+التشغيل: `cd web && npm install && npm run dev` ثم افتح `localhost:5173` (يفتح على المحاكاة، وفيه زر «جرّب السيناريو»).
