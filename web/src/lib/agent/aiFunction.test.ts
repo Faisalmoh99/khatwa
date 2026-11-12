@@ -17,7 +17,7 @@ vi.mock('@netlify/blobs', () => ({
   },
 }));
 
-const { default: handler } = await import('../../../netlify/functions/ai.mjs' as string);
+const { default: handler, aiRoute } = await import('../../../netlify/functions/ai.mjs' as string);
 const ORIGIN = 'https://deploy-preview-1--dulcet-blini-8f718e.netlify.app';
 const call = (body: object, origin = ORIGIN) =>
   handler(
@@ -95,6 +95,15 @@ describe('/api/ai function', () => {
         )
       ).status,
     ).toBe(403);
+  });
+
+  test('x-ai-route says direct or gateway, never the key', async () => {
+    expect(aiRoute(undefined)).toBe('direct');
+    expect(aiRoute('https://api.anthropic.com')).toBe('direct');
+    expect(aiRoute('https://example.netlify.app/.netlify/ai')).toBe('gateway');
+    const r = await call({ task: 'classify', text: 'x', device: 'd' });
+    expect(['direct', 'gateway']).toContain(r.headers.get('x-ai-route'));
+    expect(JSON.stringify([...r.headers])).not.toContain('test-key');
   });
 
   test('unknown origin is rejected without calling the model', async () => {

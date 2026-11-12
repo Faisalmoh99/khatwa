@@ -71,12 +71,26 @@ const ReportIn = z.object({
   last: z.object({ level: z.string().max(10), reasons: z.array(z.string().max(300)).max(5) }),
 });
 
+/**
+ * Which way model calls go, for checking a deploy (never the key itself): "direct" = our own
+ * ANTHROPIC_API_KEY straight to api.anthropic.com; "gateway" = a base URL injected by Netlify's AI Gateway.
+ */
+export function aiRoute(baseUrl = process.env.ANTHROPIC_BASE_URL): 'direct' | 'gateway' {
+  if (!baseUrl) return 'direct';
+  try {
+    return new URL(baseUrl).hostname === 'api.anthropic.com' ? 'direct' : 'gateway';
+  } catch {
+    return 'gateway';
+  }
+}
+
 const json = (body: unknown, status = 200, origin = '') =>
   new Response(JSON.stringify(body), {
     status,
     headers: {
       'content-type': 'application/json; charset=utf-8',
       'cache-control': 'no-store',
+      'x-ai-route': aiRoute(),
       ...(origin ? { 'access-control-allow-origin': origin, vary: 'Origin' } : {}),
     },
   });
