@@ -41,8 +41,9 @@ section h2{margin:0 0 6px;font-size:20px;font-weight:700;color:var(--brand)}
 .note{margin:0;color:var(--mute);font-size:14.5px}
 video{display:block;width:100%;border-radius:12px;background:#000}
 #story{aspect-ratio:848/480}
-#demo{aspect-ratio:9/16;max-height:78vh;margin:0 auto;width:auto;max-width:100%}
-@media (min-width:720px){#demo{aspect-ratio:16/9;width:100%;max-height:none}}
+video.v{aspect-ratio:9/16;max-height:78vh;margin:0 auto;width:auto;max-width:100%}
+video.h{aspect-ratio:16/9}
+@media (min-width:720px){.phone-only{display:none}}
 .cta{display:grid;gap:10px;text-align:center}
 .btn{display:flex;align-items:center;justify-content:center;gap:10px;min-height:64px;padding:14px 20px;border-radius:16px;
   background:var(--brand);color:#fff;text-decoration:none;font-size:22px;font-weight:700;box-shadow:0 8px 24px rgba(15,76,92,.28)}
@@ -88,9 +89,15 @@ footer strong{color:var(--ink-2)}
 
   <section class="card" aria-labelledby="h-demo">
     <h2 id="h-demo">النظام وهو يشتغل</h2>
-    <video id="demo" controls playsinline preload="none" poster="/media/demo-9x16.jpg"></video>
-    <noscript><a href="/media/demo-9x16.mp4">شاهد الفيديو</a></noscript>
+    <video class="v phone-only" controls playsinline preload="none" poster="/media/demo-9x16.jpg" src="/media/demo-9x16.mp4" aria-label="فيديو العرض (عمودي)"></video>
+    <video class="h" controls playsinline preload="none" poster="/media/demo-16x9.jpg" src="/media/demo-16x9.mp4" aria-label="فيديو العرض (عرضي)"></video>
     <p class="note">كود السجادة الحقيقي يشتغل على دائرة افتراضية (Wokwi). الجهاز المادي يُبنى للنهائيات.</p>
+  </section>
+
+  <section class="card full" aria-labelledby="h-flow">
+    <h2 id="h-flow">جولة التطبيق كاملة</h2>
+    <video class="v" controls playsinline preload="none" poster="/media/flow.jpg" src="/media/flow.mp4"></video>
+    <p class="note">التطبيق من أوله، بالسرعة الحقيقية وبدون تسريع. بيانات محاكاة.</p>
   </section>
 
   <section class="cta full" aria-label="جرّب التطبيق">
@@ -107,27 +114,11 @@ footer strong{color:var(--ink-2)}
 </main>
 
 <footer>
+  <p><strong>التطبيق + رفيق + كود السجادة: مبني ومختبر تقنيًا على بيانات محاكاة.</strong> الجهاز المادي يُبنى للنهائيات.</p>
   <p><strong>أداة مراقبة تدعم الإحالة، مو تشخيص. بيانات العرض محاكاة.</strong></p>
   <p>فريق خطوة · MEDATHON 2026</p>
 </footer>
 </div>
 
-<script>
-// One demo video only: vertical on phones, 16:9 on wider screens. Nothing loads until the visitor presses play.
-(function () {
-  var v = document.getElementById('demo');
-  var mq = window.matchMedia('(min-width: 720px)');
-  function pick() {
-    var kind = mq.matches ? '16x9' : '9x16';
-    if (v.dataset.kind === kind) return;
-    if (v.dataset.kind && !v.paused) return; // never swap a video that is playing
-    v.dataset.kind = kind;
-    v.poster = '/media/demo-' + kind + '.jpg';
-    v.src = '/media/demo-' + kind + '.mp4';
-  }
-  pick();
-  if (mq.addEventListener) mq.addEventListener('change', pick); else mq.addListener(pick);
-})();
-</script>
 </body>
 </html>

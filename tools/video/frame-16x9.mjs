@@ -101,7 +101,7 @@ await shot(
 );
 await shot(
   'card7.png',
-  card(`<div style="font-size:60px;font-weight:700;line-height:1.5">مبني ومجرّب: التطبيق + رفيق + كود السجادة على محاكاة.<br>التجميع للنهائيات.</div>
+  card(`<div style="font-size:60px;font-weight:700;line-height:1.5">التطبيق + رفيق + كود السجادة:<br>مبني ومختبر تقنيًا على بيانات محاكاة.<br>التجميع للنهائيات.</div>
         <div style="font-size:36px;font-weight:500;color:#cfe6ea">أداة مراقبة تدعم الإحالة، مو تشخيص.</div>
         <div style="font-size:34px;font-weight:700;direction:ltr;text-align:right;background:#145e70;padding:20px 28px;border-radius:18px;width:fit-content">${APP_URL}</div>`),
   W, H, false,

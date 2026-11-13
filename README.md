@@ -59,9 +59,9 @@ flowchart LR
 
 More detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · data contract: [docs/DATA_SCHEMA.md](docs/DATA_SCHEMA.md).
 
-## Built and tested / Designed / Next
+## Built and technically tested on simulated data / Designed / Next
 
-| Built and tested (evidence in this repo) | Designed, not built yet | Next |
+| Built and technically tested on simulated data (evidence in this repo) | Designed, not built yet | Next |
 |---|---|---|
 | Web app (PWA): patient, family and clinic screens; opens offline. Unit + e2e tests at iPhone size, accessibility checks (axe) | The physical mat: 4 × DS18B20 per foot + 1 pressure sensor under each heel, ESP32, LEDs, buzzer (parts are ordered only if we reach the finals) | Build the mat for the finals, then calibrate it against a medical thermometer and measure accuracy and scan time (no such figure is claimed before that) |
 | IWGDF rule engine (> 2.2 °C, same point, same foot, 2 consecutive days) with quality checks: one foot, movement, wet foot, faulty sensor, whole-foot difference | Pressure map of the whole foot (the heel sensor only checks standing) | Pilot with a clinic, after ethics approval |
@@ -160,7 +160,7 @@ The legacy rule tests still run from the repo root: `npm test`. CI runs everythi
 **خطوة** سجادة عند مكان الوضوء، يقف عليها مريض السكري كل يوم قبل الوضوء. **مصمم لـ 4 حساسات حرارة لكل قدم + ضغط الكعب. الجهاز المادي يُبنى للنهائيات.** وتقارن القدمين. إذا صار الفرق في نفس النقطة **أكبر من 2.2°م ليومين متتاليين** ونفس القدم هي الأسخن (توصية IWGDF)، ننبّه المريض ثم العائلة ثم العيادة.
 
 - **أداة مراقبة تدعم الإحالة، مو تشخيص.** النموذج ما اختُبر سريريًا.
-- **مبني ومجرّب:** التطبيق (المريض والعائلة والعيادة، ويشتغل بدون نت)، وقاعدة IWGDF، وسلّم المتابعة، ورفيق (قوالب ثابتة + Claude Haiku للكلام الحر)، وتقرير الزيارة، وكود السجادة (ESP32) على دائرة افتراضية في Wokwi.
+- **مبني ومختبر تقنيًا على بيانات محاكاة:** التطبيق (المريض والعائلة والعيادة، ويشتغل بدون نت)، وقاعدة IWGDF، وسلّم المتابعة، ورفيق (قوالب ثابتة + Claude Haiku للكلام الحر)، وتقرير الزيارة، وكود السجادة (ESP32) على دائرة افتراضية في Wokwi.
 - **مصمم، ما انبنى:** السجادة نفسها (4 حساسات حرارة لكل قدم + ضغط الكعب). القطع تنطلب إذا وصلنا للنهائيات.
 - **إصدار قادم:** خريطة الضغط، والتروية، وتحليل الصور بالذكاء الاصطناعي، والإشعارات الحقيقية، وحساسات TMP117.
 - **الشفافية:** استُخدم Claude في كتابة أجزاء من الكود والوثائق. وفي التطبيق: Claude Haiku يفهم كلام المريض الحر ويحوّله لواحد من 7 بلاغات ثابتة، ويكتب ملخص اختياري للطبيب. **ما يغيّر مستوى الخطر أبدًا**، والرد للمريض دايمًا من القوالب. أرقام مختبر القاعدة من افتراضاتنا.

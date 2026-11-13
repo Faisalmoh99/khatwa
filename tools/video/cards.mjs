@@ -38,7 +38,7 @@ const cards = {
     <div class="big">كل 30 ثانية يفقد شخص في العالم ساقه بسبب السكري</div>
     <div class="src">The Lancet, 2005 (Boulton et al.)</div></div>`,
   card7: `<div class="card"><img src="${logo}">
-    <div class="mid">مبني ومجرّب: التطبيق + رفيق + كود السجادة على محاكاة.<br>التجميع للنهائيات.</div>
+    <div class="mid">التطبيق + رفيق + كود السجادة:<br>مبني ومختبر تقنيًا على بيانات محاكاة.<br>التجميع للنهائيات.</div>
     <div class="small">أداة مراقبة تدعم الإحالة، مو تشخيص.</div>
     <div class="link">${APP_URL}</div></div>`,
 };
