@@ -83,7 +83,7 @@ Running the unchanged firmware on Wokwi printed `# scan saved` twice after the f
 
 | Suite | Count | Command |
 |---|---|---|
-| Unit tests (Vitest): rule engine + parity with `rules.js`, levels, ladder, escalations, Rafiq, AI function, report, rule lab | **251** | `cd web && npm test` |
+| Unit tests (Vitest): rule engine + parity with `rules.js`, levels, ladder, escalations, Rafiq, AI function, report, rule lab, simulated history | **256** | `cd web && npm test` |
 | End-to-end (Playwright, iPhone size): every screen, guided tour, quality scenarios, accessibility (axe), PWA/offline | **92** | `cd web && npm run e2e` |
 | Rules: Firebase database rules on the emulator (20) + legacy rule engine `rules.js` (13) | **33** | `cd web && npm run test:rules` · `npm test` (root) |
 | Firmware core logic and JSON builders (g++ on the computer, no Arduino) | **41** | see [`firmware/README.md`](firmware/README.md) |

@@ -136,9 +136,11 @@ export function generateDays(scn: DaysScenario, nowTs: number, days = 30): Omit<
   const DAY = 86_400_000;
   const prof = mulberry32(scn.seed * 9973);
   const asym = SKIN.map(() => (prof() - 0.5) * 0.4);
-  // Anchor at 08:00 Riyadh (05:00 UTC) of today
-  const today = new Date(nowTs);
-  const anchor = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate(), 5, 0, 0);
+  // Anchor at 08:00 Riyadh (UTC+3, no DST) of today's Riyadh date (days are Riyadh calendar days, see level.ts).
+  // Before 08:00 Riyadh, today's scan is placed at "now" so today always has its reading.
+  const today = new Date(nowTs + 3 * 3_600_000);
+  const at8 = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate(), 5, 0, 0);
+  const anchor = Math.min(at8, nowTs);
   for (let d = 1; d <= days; d++) {
     if (scn.missing.includes(d)) continue;
     const rng = mulberry32(scn.seed * 1000 + d);
